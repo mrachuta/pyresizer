@@ -1,0 +1,10 @@
+#Ignore selected project-files
+build
+dist
+pyResizer.spec
+Thumbs.db
+.idea/
+__pycache__
+*.log
+*.pot
+*.pyc
