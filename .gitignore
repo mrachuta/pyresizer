@@ -3,6 +3,7 @@ build
 dist
 pyResizer.spec
 Thumbs.db
+pyresizer-icon.ico
 .idea/
 __pycache__
 *.log
