@@ -24,9 +24,9 @@ class Resizer:
     @property
     def get_imgs(self):
         return [
-            str(i.lower())
+            str(i)
             for i in listdir()
-            if path.isfile(i) and any(x in i for x in self.img_formats)
+            if path.isfile(i) and any(x in i.lower() for x in self.img_formats)
         ]
 
     def make_backups(self):
