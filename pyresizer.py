@@ -1,182 +1,350 @@
-# -*- Coding: UTF-8 -*-
+#!/usr/bin/env python3
 
-import winreg
+import platform
 import argparse
-from sys import argv
-from shutil import copy2, rmtree
-from os import listdir, path, mkdir
-from PIL.Image import open, ANTIALIAS
+import sys
+from re import compile as re_compile, MULTILINE as re_MULTILINE
+from shutil import copy2 as shutil_copy2, rmtree as shutil_rmtree
+from os import (
+    listdir as os_listdir,
+    path as os_path,
+    mkdir as os_mkdir,
+    remove as os_remove,
+)
+from PIL.Image import open as pil_open
+from PIL.Image import Resampling as pil_Resampling
+
+if platform.system() == "Windows":
+    import winreg
 
 
 class Resizer:
-
     """Main functionality of tool"""
 
-    def __init__(self):
+    def __init__(self, new_width, new_height):
         # Both sizes could be changed according to requirements
-        self.img_width = 1200
-        self.img_height = 1600
-        self.img_dims = (self.img_width, self.img_height)
-        self.img_formats = ['.bmp', '.gif', '.jpg', '.jpeg', '.png']
-        self.bak_folder = 'bak'
+        self.img_dims = (new_width, new_height)
+        self.img_formats = [".bmp", ".gif", ".jpg", ".jpeg", ".png"]
+        self.bak_folder = "bak"
 
     # Keep image list always up-to-date
     @property
     def get_imgs(self):
         return [
             str(i)
-            for i in listdir()
-            if path.isfile(i) and any(x in i.lower() for x in self.img_formats)
+            for i in os_listdir()
+            if os_path.isfile(i) and any(x in i.lower() for x in self.img_formats)
         ]
 
     def make_backups(self):
-        print('Creating original images backup...')
+
+        print("Backing up original images...")
         try:
-            if not path.exists(self.bak_folder):
-                mkdir(self.bak_folder)
+            if not os_path.exists(self.bak_folder):
+                os_mkdir(self.bak_folder)
             for i in self.get_imgs:
-                copy2(i, path.join(self.bak_folder, i))
-            print('Backup created.')
+                shutil_copy2(i, os_path.join(self.bak_folder, i))
+            print("Backup created.")
         except IOError:
-            print('Error: unable to create backup.')
-            dec = input('Do you want to proceed to next step? [y/n]: ')
-            if dec.lower() == 'y':
+            print("Error: unable to create backup!")
+            dec = input("Do you want to proceed to next step? [y/n]: ")
+            if dec.lower() == "y":
                 return True
             else:
                 return False
 
     def resize_files(self):
+
         imgs_quantity = len(self.get_imgs)
-        if imgs_quantity:
-            print(f'{imgs_quantity} files will be processed')
+        if imgs_quantity > 0:
+            print(f"{imgs_quantity} files will be processed")
         else:
-            print('Error: no images to processing found.')
-            return False
+            print("No images to be processed.")
+            return True
         try:
             self.make_backups()
             for index, i in enumerate(self.get_imgs):
-                print(f'Resizing {i} ({index+1} of {imgs_quantity})')
-                im = open(i)
-                im.thumbnail(self.img_dims, ANTIALIAS)
+                print(f"Resizing {i} ({index+1} of {imgs_quantity})...")
+                im = pil_open(i)
+                im.thumbnail(self.img_dims, pil_Resampling.LANCZOS)
                 im.save(i)
-                print(f'Resizing {i} finished.')
-            print('Processing finished.')
-        except IOError:
-            print('Error: some files was not processed.')
-            return False
+                print(f"Resizing {i} finished.")
+            print("Processing finished.")
+        except IOError as exc:
+            raise IOError("Error: some files were not processed!") from exc
 
 
 class InstallerUninstaller:
-
     """Installation or uninstallation of tool"""
 
-    def __init__(self):
-        
-        self.app_name = 'pyresizer'
+    def __init__(self, app_name):
 
-        """
-        Installation target_path and registry root-path path can be changed, 
-        but this configuration allows user to install tool without administrator 
-        privileges.
-        """
+        if not getattr(sys, "frozen", False):
+            raise SystemError(
+                "Error: cannot install Python file because of dependecies."
+            )
 
-        self.user_home = path.join(path.expanduser('~'), 'AppData', 'Local')
-        self.curr_file_path = path.join(
-            path.dirname(path.abspath(__file__)), 
-            [argv[0] if '.exe' in argv[0] else argv[0]+'.exe'][0]
+        self.home_dir = os_path.expanduser("~")
+
+        self.app_executable = os_path.basename(sys.argv[0])
+        self.curr_file_path = os_path.join(
+            os_path.dirname(sys.executable), self.app_executable
         )
-        self.target_path = path.join(self.user_home, self.app_name, self.app_name+'.exe')
-        self.reg_path = r'Software\Classes\Directory\Background\shell\pyresizer'
 
-    def modify_context_menu(self):
+        if platform.system() == "Windows":
+            # Subdir
+            self.install_path = os_path.join(
+                self.home_dir, "AppData", "Local", app_name
+            )
+            self.reg_path = (
+                f"Software\\Classes\\Directory\\Background\\shell\\{app_name}"
+            )
+        elif platform.system() == "Linux":
+            # No subdir
+            self.install_path = os_path.join(self.home_dir, ".local", "bin")
+            self.default_bash_file = f"{self.home_dir}/.bashrc"
+        else:
+            raise SystemError(
+                "Error: cannot continue installation. Unsupported platform."
+            )
 
-        print('Adding registry keys...')
+        self.full_path = os_path.join(self.install_path, self.app_executable)
+
+    def _remove_from_windows_context_menu(self):
+
+        if platform.system() == "Windows":
+            try:
+                print("Removing application from context menu registry keys...")
+                winreg.DeleteKey(winreg.HKEY_CURRENT_USER, f"{self.reg_path}\\command")
+                winreg.DeleteKey(winreg.HKEY_CURRENT_USER, self.reg_path)
+                print("Registry keys removed.")
+            except OSError as exc:
+                raise OSError("Error: unable to remove registry keys!") from exc
+        else:
+            raise SystemError(
+                "Error: cannot continue installation. Unsupported platform."
+            )
+
+    def _add_to_windows_context_menu(self):
+
+        if platform.system() == "Windows":
+            try:
+                print("Adding application to context menu registry keys...")
+                reg_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, self.reg_path)
+                winreg.SetValue(reg_key, None, winreg.REG_SZ, "Use pyresizer here")
+                # Registry key for icon
+                winreg.SetValueEx(
+                    reg_key,
+                    "Icon",
+                    0,
+                    winreg.REG_SZ,
+                    f"{self.install_path}\\{self.app_executable}",
+                )
+                # Registry key responsible for command, which will be executed
+                reg_key_command = winreg.CreateKey(reg_key, "command")
+                winreg.SetValue(
+                    reg_key_command,
+                    None,
+                    winreg.REG_SZ,
+                    f"{self.install_path}\\{self.app_executable}",
+                )
+                winreg.CloseKey(reg_key_command)
+                winreg.CloseKey(reg_key)
+                print("Registry keys added successfully.")
+            except OSError:
+                print("Error: unable to add registry keys!")
+                return False
+        else:
+            raise SystemError(
+                "Error: cannot continue installation. Unsupported platform."
+            )
+
+    def _add_to_linux_path(self):
+
+        print("Adding application to $PATH...")
+        bash_files_and_dirs = [
+            f"{self.home_dir}/.bashrc",
+            f"{self.home_dir}/.profile",
+            f"{self.home_dir}/.bash_profile",
+            f"{self.home_dir}/.bash.login",
+            f"{self.home_dir}/.bash_aliases",
+            "/etc/bash.bashrc",
+            "/etc/profile",
+            "/etc/profile.d",
+            "/etc/environment",
+        ]
+
+        existing_files = []
+        for bash_path in bash_files_and_dirs:
+            try:
+                if os_path.exists(bash_path):
+                    if os_path.isdir(bash_path):
+                        files_in_dir = [
+                            os_path.join(bash_path, f) for f in os_listdir(bash_path)
+                        ]
+                        existing_files.extend(files_in_dir)
+                    else:
+                        existing_files.append(bash_path)
+            except Exception as e:
+                print(f"Error: error during reading object: {e}")
+
+        for bash_file in existing_files:
+            try:
+                print(
+                    f"Checking file {bash_file} against presence of $HOME/.local/bin in $PATH..."
+                )
+                with open(bash_file, "r") as f:
+                    for line in f:
+                        if re_compile(r"^PATH=.*\$HOME\/\.local\/bin").search(line):
+                            print(
+                                f"$HOME/.local/bin found in $PATH in file {bash_file}. Changes in $PATH not needed."
+                            )
+                            return True
+            except Exception as e:
+                print(f"Error: error during reading object {bash_file}: {e}")
+
+        print(
+            f"$HOME/.local/bin not found in $PATH in any of files. Adding changes to {self.default_bash_file}"
+        )
         try:
-            reg_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, self.reg_path)
-            winreg.SetValue(reg_key, None, winreg.REG_SZ, 'Use pyresizer here')
-            # Registry key for icon
-            winreg.SetValueEx(reg_key, 'Icon', 0, winreg.REG_SZ, self.target_path)
-            # Registry key responsible for command, which will be executed
-            reg_key_command = winreg.CreateKey(reg_key, 'command')
-            winreg.SetValue(reg_key_command, None, winreg.REG_SZ, self.target_path)
-            winreg.CloseKey(reg_key_command)
-            winreg.CloseKey(reg_key)
-            print('Registry keys added successfully.')
-        except OSError:
-            print('Error: unable to add registry keys.')
-            return False
+            with open(f"{self.default_bash_file}", "a") as f:
+                f.write(
+                    '# Update added by pyresizer\nPATH="$HOME/.local/bin:$PATH"\nexport $PATH\n# End of pyresizer update\n\n'
+                )
+            print("$PATH modified. Reload your bash please.")
+        except Exception as e:
+            print(f"Error: error during writing object {self.default_bash_file}: {e}")
+
+    def _remove_from_linux_path(self):
+
+        try:
+            print("Removing application from $PATH...")
+            with open(f"{self.default_bash_file}", "r") as f:
+                file_content = f.read()
+            # Get content and replace
+            update_pattern = re_compile(
+                r'# Update added by pyresizer\nPATH="\$HOME/\.local/bin:\$PATH"\nexport \$PATH\n# End of pyresizer update\n\n',
+                re_MULTILINE,
+            )
+            if not update_pattern.search(file_content):
+                print(
+                    "$PATH not modified by application, pattern not found. Skipping..."
+                )
+                return True
+
+            new_content = update_pattern.sub("", file_content)
+            with open(f"{self.default_bash_file}", "w") as f:
+                f.write(new_content)
+            print("$PATH modified. Reload your bash please.")
+        except Exception as e:
+            print(
+                f"Error: error during reading or writing object {self.default_bash_file}: {e}"
+            )
 
     def copy_file(self):
 
-        print('Copying executable file...')
-        target_folder = path.join(self.user_home, self.app_name)
-        try:
-            if not path.exists(target_folder):
-                mkdir(path.join(self.user_home, self.app_name))
+        if platform.system() not in ["Windows", "Linux"]:
+            raise SystemError(
+                "Error: cannot continue installation. Unsupported platform."
+            )
 
-            copy2(self.curr_file_path, self.target_path)
-            print('Executable file copied successfully.')
-            self.modify_context_menu()
-        except IOError:
-            print('Error: executable file not copied')
-            return False
+        print("Copying executable file...")
+        try:
+            if not os_path.exists(self.install_path):
+                os_mkdir(self.install_path)
+
+            shutil_copy2(self.curr_file_path, self.full_path)
+            print(f"Executable file copied successfully to {self.full_path}.")
+        except IOError as exc:
+            raise IOError("Error: executable file not copied!") from exc
+
+        if platform.system() == "Windows":
+            self._add_to_windows_context_menu()
+
+        if platform.system() == "Linux":
+            self._add_to_linux_path()
+
+        print("Installation completed!")
 
     def remove_file(self):
 
-        print('Removing executable file...')
-        if path.exists(self.target_path):
-            rmtree(path.dirname(self.target_path), ignore_errors=False, onerror=None)
-            print('Executable file removed.')
-        else:
-            print('Executable file not found, maybe app is not installed?')
+        if platform.system() not in ["Windows", "Linux"]:
+            raise SystemError(
+                "Error: cannot continue uninstallation. Unsupported platform."
+            )
 
-    def revert_context_menu(self):
+        if platform.system() == "Windows":
+            try:
+                print("Removing subdirectory together with executable file...")
+                shutil_rmtree(
+                    # Trailing delimiter is extremely important (or direct path to file)
+                    # to ensure deletion of only target dir with it's content.
+                    os_path.dirname(self.full_path),
+                    ignore_errors=False,
+                    onerror=None,
+                )
+                print(
+                    f"Subdirectory together with executable file removed {self.full_path}."
+                )
+            except OSError as exc:
+                raise OSError(
+                    "Error: subdirectory together with executable file not removed!"
+                ) from exc
+            self._remove_from_windows_context_menu()
 
-        print('Removing registry keys...')
-        try:
-            winreg.DeleteKey(winreg.HKEY_CURRENT_USER, self.reg_path + r'\command')
-            winreg.DeleteKey(winreg.HKEY_CURRENT_USER, self.reg_path)
-            print('Registry keys removed.')
-        except OSError:
-            print('Registry keys not found, maybe app is not installed?')
+        if platform.system() == "Linux":
+            print("Removing executable file...")
+            try:
+                os_remove(self.full_path)
+                print(f"Executable file removed from {self.full_path}.")
+            except OSError as exc:
+                raise OSError("Error: executable file not removed!") from exc
+            self._remove_from_linux_path()
+
+        print("Uninstallation completed!")
 
 
-def core():
+def main():
+
+    script = os_path.basename(sys.argv[0])
+    app_name = "pyresizer"
+    desc = f"{app_name} 2.0.0. Script to quickly resize images."
+    parser = argparse.ArgumentParser(prog=script, description=desc)
+
     print(
         """\
         ┌─┐┬ ┬┬─┐┌─┐┌─┐┬┌─┐┌─┐┬─┐
         ├─┘└┬┘├┬┘├┤ └─┐│┌─┘├┤ ├┬┘
         ┴   ┴ ┴└─└─┘└─┘┴└─┘└─┘┴└─
-        (c) 2019. 
+        \n
         \nType -h or --help to see more information.
         """
     )
-    parser = argparse.ArgumentParser()
+
     parser.add_argument(
-        '-i', '--install', help='Install to the context menu', action='store_true'
+        "-i", "--install", help="Install to the context menu", action="store_true"
     )
     parser.add_argument(
-        '-u', '--uninstall', help='Remove from the context menu', action='store_true'
+        "-u", "--uninstall", help="Remove from the context menu", action="store_true"
+    )
+    parser.add_argument("-x", "--width", help="New image width", type=int, default=1200)
+    parser.add_argument(
+        "-y", "--height", help="New image height", type=int, default=1600
     )
     args = parser.parse_args()
     if args.install:
-        print('Installing pyresizer...')
-        installer = InstallerUninstaller()
-        # Due to nested function, installation of script is not possible
+        print("Installing pyresizer...")
+        installer = InstallerUninstaller(app_name)
         installer.copy_file()
     elif args.uninstall:
-        print('Uninstalling pyresizer...')
-        uninstaller = InstallerUninstaller()
+        print("Uninstalling pyresizer...")
+        uninstaller = InstallerUninstaller(app_name)
         uninstaller.remove_file()
-        uninstaller.revert_context_menu()
     else:
-        resizer = Resizer()
-        # Nested functions again, to prevent inform user about successful conversion
-        if resizer.resize_files():
-            print('Resizing finished.')
-        input('Press enter to exit...')
-        raise SystemExit
+        resizer = Resizer(args.width, args.height)
+        resizer.resize_files()
+        input("Press ENTER key to exit...")
 
 
-if __name__ == '__main__':
-    core()
+if __name__ == "__main__":
+    main()
