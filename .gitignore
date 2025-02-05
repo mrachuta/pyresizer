@@ -1,7 +1,7 @@
 #Ignore selected project-files
 build
 dist
-pyResizer.spec
+*.spec
 Thumbs.db
 pyresizer-icon.ico
 .idea/
