@@ -1,79 +1,98 @@
 ## Project name
-pyresize - a python tool, that allows to resize a large number of images in one click.
+pyresizer - a python tool, that allows to resize a large number of images in one shot.
 
 ## Table of contents
-* [General info](#general-info)
-* [Technologies](#technologies)
-* [Setup](#setup)
-* [Usage](#usage)
-* [Thanks](#thanks)
+- [Project name](#project-name)
+- [Table of contents](#table-of-contents)
+- [General info](#general-info)
+- [Technologies](#technologies)
+- [Setup](#setup)
+  - [From bundle](#from-bundle)
+  - [From sources](#from-sources)
+  - [Removal](#removal)
+- [Usage](#usage)
+
 
 ## General info
-Idea for tool was born due to problems in departament that I working for.
-My user account has no permissions to install external software, so I was 
-unable to install any external resizing tools. Some people were using 
-old IrfanView versions, other were using pre-installed Microsoft PhotoEditor. 
-Both of them are slow and for some users not intuitive.
+The idea for the tool was born due to problems in the department that I worked for. None of PCs has permissions to install external software, so each of users 
+has problems with quick & easy resizing of photos. Some of people were using old IrfanView versions, another used pre-installed Microsoft PhotoEditor.  Both of them are slow and not intuitive for some users. Additionally, photos were resized to different dimensions. It was a good time to introduce some standardisation.
 
 App is aimed to:
-
-a) be fast,  
-b) be lightweight,  
-c) be compatible with Windows7/8/10,  
-d) require no administration privileges to install and run,  
-e) require as less user integration as possible,  
-f) automate process as much as possible.  
-
-Only goal b) was not fulfilled (because of size of executable)
+  - be fast,  
+  - be lightweight (if Python can be so),
+  - be compatible with Windows 10/11 and Linux,
+  - require no administration privileges to install, run and uninstall,
+  - require as less user interaction as possible 
 
 ## Technologies
-* Python 3.
-
-File was compilled to executable using pyInstaller.
+Just Python.
 
 Code was tested on following platforms:
+  - Windows 10 with Python 3.11.0 
+  - Windows 11 with Python 3.13.0
+  - Linux with Python 3.13.1
 
-* Windows 8.1 (PL-PL) (x64) with Python 3.7.1  
-* Windows 8.1 (EN-US) (x64) with Python 3.6.4  
-* Windows 7 (PL-PL) (x64) with Python 3.7.1  
-
-Used libraries:
-* altgraph==0.16.1
-* future==0.17.1
-* macholib==1.11
-* pefile==2019.4.18
-* Pillow==6.0.0
-* PyInstaller==3.4
-* pywin32-ctypes==0.2.0
+Libraries required to run are available in *requirements.txt* file.
 
 ## Setup
 
-1. Clone git repo to localhost,
-2. OPTIONAL: Install required packages (if you want to use pyresizer as Python script)
-  
+### From bundle
+
+1. Download latest release from Github Releases tab
+2. Install:
+     - Windows
+       ```
+       pyresizer.exe -i
+       ```
+       This command installs pyresizer in you App Data directory and adds an entry to the context menu to use it in any directory you want in simple way.
+     - Linux
+       ```
+       pyresizer -i
+       ```
+       This command installs pyresizer in *$HOME/.local/bin* and modifies *.bashrc* by adding path to $PATH variable if path it does not already exists.
+
+### From sources
+
+1. Clone git repo to localhost
+2. Create virtualenv (example for virtualenvwrapper)
+    ```
+    cd pyresizer && mkvirtualenv pyresizer
+    pip install -r requirements.txt
+    ```
+3. Build package (executable will be available in *dist* folder)
+    ```
+    pyinstaller -F pyresizer.py
+    ```
+4. See setup from bundle, point no. 2
+
+### Removal
+
+1. Perform following command to remove tool:
+     - Windows
+       ```
+       pyresizer.exe -ui
+       ```
+       This command removes pyresizer from your App Data directory and the entry from the context menu.
+     - Linux
+       ```
+       pyresizer -u
+       ```
+       This command removes pyresizer from *$HOME/.local/bin* and remove $PATH update from *.bashrc* (only, if it has been added previously).
+
 ## Usage
 
-Open console and change directory to cloned repository and run:
-
-- for executable:  
+- Run
   ```
   pyresizer
   ```
-- for script:  
+- Run with custom image size
   ```
-  python3 pyresizer.py
+  pyresizer -x 2400 -y 3200
+  ```
+- Help
+  ```
+  pyresizer -h
   ```
 
-WARNING: tool is automatically converting all images in folder where you started it.
-Don't worry, original files are always available in *bak* folder, automatically created 
-in current working directory.
-
-Available options:
-```
--h - see help,  
--i - install as context-menu tool (available only for executable verison),  
--u - remove from context-menu (available only for executable version).  
-```
-## Thanks
-
-For me :)
+ATTENTION: the tool will automatically convert all the images in the folder, where you run it.
+Don't worry, the original file are always available in *bak* folder in the same location.
