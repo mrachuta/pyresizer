@@ -1,0 +1,14 @@
+name: CI build
+run-name: CI job triggered by ${{ github.event_name }} to ${{ github.ref_name }}
+on: [workflow_dispatch]
+
+jobs:
+  os_matrix:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
