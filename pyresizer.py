@@ -312,11 +312,10 @@ def main():
     parser = argparse.ArgumentParser(prog=script, description=desc)
 
     print(
-        """\
+        """\n
         ┌─┐┬ ┬┬─┐┌─┐┌─┐┬┌─┐┌─┐┬─┐
         ├─┘└┬┘├┬┘├┤ └─┐│┌─┘├┤ ├┬┘
         ┴   ┴ ┴└─└─┘└─┘┴└─┘└─┘┴└─
-        \n
         \nType -h or --help to see more information.
         """
     )
