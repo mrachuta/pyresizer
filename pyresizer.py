@@ -319,7 +319,7 @@ def main():
     parser = argparse.ArgumentParser(prog=script, description=desc)
 
     print(
-        """\n
+        u"""\n
         ┌─┐┬ ┬┬─┐┌─┐┌─┐┬┌─┐┌─┐┬─┐
         ├─┘└┬┘├┬┘├┤ └─┐│┌─┘├┤ ├┬┘
         ┴   ┴ ┴└─└─┘└─┘┴└─┘└─┘┴└─
