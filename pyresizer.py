@@ -45,6 +45,7 @@ class Resizer:
             for i in self.get_imgs:
                 shutil_copy2(i, os_path.join(self.bak_folder, i))
             print("Backup created.")
+            return True
         except IOError:
             print("Error: unable to create backup!")
             dec = input("Do you want to proceed to next step? [y/n]: ")
@@ -70,6 +71,7 @@ class Resizer:
                 im.save(i)
                 print(f"Resizing {i} finished.")
             print("Processing finished.")
+            return True
         except IOError as exc:
             raise IOError("Error: some files were not processed!") from exc
 
@@ -118,6 +120,7 @@ class InstallerUninstaller:
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, f"{self.reg_path}\\command")
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, self.reg_path)
                 print("Registry keys removed.")
+                return True
             except OSError as exc:
                 raise OSError("Error: unable to remove registry keys!") from exc
         else:
@@ -151,9 +154,9 @@ class InstallerUninstaller:
                 winreg.CloseKey(reg_key_command)
                 winreg.CloseKey(reg_key)
                 print("Registry keys added successfully.")
-            except OSError:
-                print("Error: unable to add registry keys!")
-                return False
+                return True
+            except OSError as exc:
+                raise OSError("Error: unable to add registry keys!") from exc
         else:
             raise SystemError(
                 "Error: cannot continue installation. Unsupported platform."
@@ -212,8 +215,9 @@ class InstallerUninstaller:
                     '# Update added by pyresizer\nPATH="$HOME/.local/bin:$PATH"\nexport $PATH\n# End of pyresizer update\n\n'
                 )
             print("$PATH modified. Reload your bash please.")
+            return True
         except Exception as e:
-            print(f"Error: error during writing object {self.default_bash_file}: {e}")
+            raise SystemError(f"Error: error during writing object {self.default_bash_file}: {e}")
 
     def _remove_from_linux_path(self):
 
@@ -236,8 +240,9 @@ class InstallerUninstaller:
             with open(f"{self.default_bash_file}", "w") as f:
                 f.write(new_content)
             print("$PATH modified. Reload your bash please.")
+            return True
         except Exception as e:
-            print(
+            raise SystemError(
                 f"Error: error during reading or writing object {self.default_bash_file}: {e}"
             )
 
@@ -265,6 +270,7 @@ class InstallerUninstaller:
             self._add_to_linux_path()
 
         print("Installation completed!")
+        return True
 
     def remove_file(self):
 
@@ -302,6 +308,7 @@ class InstallerUninstaller:
             self._remove_from_linux_path()
 
         print("Uninstallation completed!")
+        return True
 
 
 def main():
