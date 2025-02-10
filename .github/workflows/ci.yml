@@ -22,18 +22,15 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run unit tests
-        run: python -m unittest tests/unittests.py
+        run: python -m unittest ./tests/unittests.py
 
       - name: Build package
         run: pyinstaller -F pyresizer.py
 
-      - name: Run binary
-        run:   |
-              if [ "$RUNNER_OS" == "Linux" ]; then
-                    ./dist/pyresizer -h
-              elif [ "$RUNNER_OS" == "Windows" ]; then
-                    ./dist/pyresizer.exe -h
-              else
-                    echo "$RUNNER_OS not supported"
-                    exit 1
-              fi
+      - name: Run binary (Linux)
+        if: runner.os == 'Linux'
+        run:  ./dist/pyresizer -h
+
+      - name: Run binary (Windows)
+        if: runner.os == 'Windows'
+        run:  ./dist/pyresizer.exe -h
