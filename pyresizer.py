@@ -313,13 +313,14 @@ class InstallerUninstaller:
 
 def main():
 
+    sys.stdout.reconfigure(encoding='utf-8')
     script = os_path.basename(sys.argv[0])
     app_name = "pyresizer"
     desc = f"{app_name} 2.0.0. Script to quickly resize images."
     parser = argparse.ArgumentParser(prog=script, description=desc)
 
     print(
-        u"""\n
+        """\n
         ┌─┐┬ ┬┬─┐┌─┐┌─┐┬┌─┐┌─┐┬─┐
         ├─┘└┬┘├┬┘├┤ └─┐│┌─┘├┤ ├┬┘
         ┴   ┴ ┴└─└─┘└─┘┴└─┘└─┘┴└─
