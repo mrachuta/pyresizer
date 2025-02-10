@@ -22,7 +22,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run unit tests
-        run: python tests/unittests.py
+        run: python -m unittest tests/unittests.py
 
       - name: Build package
         run: pyinstaller -F pyresizer.py
