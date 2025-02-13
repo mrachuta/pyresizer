@@ -12,12 +12,33 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run secrets scanning
+        if: runner.os == 'Linux'
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --results=verified,unknown
+
+      - name: Run Python linter
+        if: runner.os == 'Linux'
+        uses: sunnysid3up/python-linter@master
+        with:
+          source: "."
+          django: false
+
+      - name: Run SCA scan
+        if: runner.os == 'Linux'
+        uses: pypa/gh-action-pip-audit@v1.1.0
+        with:
+          inputs: requirements.txt
 
       - name: Initialize python
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
-        
+
       - name: Install packages
         run: pip install -r requirements.txt
 
