@@ -34,9 +34,9 @@ jobs:
         run: |
           #!/usr/bin/env bash
           set -xeu -o pipefail
-          mypy --config-file pyproject.toml
-          isort --check-only
-          pylint --rcfile=pyproject.toml
+          mypy . --config-file pyproject.toml
+          isort . --check-only
+          pylint . --rcfile=pyproject.toml
 
       - name: Run unit tests
         run: python -m unittest ./tests/unittests.py
