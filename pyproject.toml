@@ -1,0 +1,26 @@
+[project]
+name = "pyresizer"
+description = "Script to quickly resize images."
+requires-python = ">=3.9"
+
+[tool.coverage.run]
+branch = true
+source = ["pyresizer"]
+
+[tool.coverage.report]
+precision  = 2
+skip_empty = true
+
+[[tool.mypy.overrides]]
+module = "PIL.Image"
+ignore_missing_imports = true
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.pylint.basic]
+recursive = true
+fail-under = 8
+disable = ["C0116", "C0115", "C0114", "E0401"]

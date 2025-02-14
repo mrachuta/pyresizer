@@ -2,6 +2,8 @@ import unittest
 from unittest.mock import patch, MagicMock
 from pyresizer import Resizer
 from pyresizer import InstallerUninstaller
+import sys
+import io
 
 # Unit tests generated with support of DeepSeek AI
 
@@ -147,14 +149,12 @@ class TestResizer(unittest.TestCase):
     @patch("pyresizer.os_listdir")
     @patch("pyresizer.os_path.isfile")
     @patch("pyresizer.pil_open")
-    @patch("pyresizer.shutil_copy2")
     @patch("pyresizer.os_path.exists")
     @patch("pyresizer.os_mkdir")
     def test_resize_files_failure(
         self,
         mock_mkdir,
         mock_exists,
-        mock_copy2,
         mock_pil_open,
         mock_isfile,
         mock_listdir,
@@ -208,7 +208,7 @@ class TestInstallerUninstaller(unittest.TestCase):
 
         mock_platform.system.return_value = "Darwin"
         # Test that creating a Resizer object with no arguments raises a TypeError
-        with self.assertRaises(TypeError) as context:
+        with self.assertRaises(TypeError):
             InstallerUninstaller()
 
     @patch("pyresizer.sys")

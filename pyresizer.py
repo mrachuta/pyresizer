@@ -33,7 +33,8 @@ class Resizer:
         return [
             str(i)
             for i in os_listdir()
-            if os_path.isfile(i) and any(x in i.lower() for x in self.img_formats)
+            if os_path.isfile(i)
+            and any(x in i.lower() for x in self.img_formats)
         ]
 
     def make_backups(self):
@@ -49,10 +50,7 @@ class Resizer:
         except IOError:
             print("Error: unable to create backup!")
             dec = input("Do you want to proceed to next step? [y/n]: ")
-            if dec.lower() == "y":
-                return True
-            else:
-                return False
+            return bool(dec.lower() == "y")
 
     def resize_files(self):
 
@@ -78,6 +76,8 @@ class Resizer:
 
 class InstallerUninstaller:
     """Installation or uninstallation of tool"""
+
+    textEncoding = "utf-8"
 
     def __init__(self, app_name):
 
@@ -117,7 +117,9 @@ class InstallerUninstaller:
         if platform.system() == "Windows":
             try:
                 print("Removing application from context menu registry keys...")
-                winreg.DeleteKey(winreg.HKEY_CURRENT_USER, f"{self.reg_path}\\command")
+                winreg.DeleteKey(
+                    winreg.HKEY_CURRENT_USER, f"{self.reg_path}\\command"
+                )
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, self.reg_path)
                 print("Registry keys removed.")
                 return True
@@ -133,8 +135,12 @@ class InstallerUninstaller:
         if platform.system() == "Windows":
             try:
                 print("Adding application to context menu registry keys...")
-                reg_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, self.reg_path)
-                winreg.SetValue(reg_key, None, winreg.REG_SZ, "Use pyresizer here")
+                reg_key = winreg.CreateKey(
+                    winreg.HKEY_CURRENT_USER, self.reg_path
+                )
+                winreg.SetValue(
+                    reg_key, None, winreg.REG_SZ, "Use pyresizer here"
+                )
                 # Registry key for icon
                 winreg.SetValueEx(
                     reg_key,
@@ -183,47 +189,58 @@ class InstallerUninstaller:
                 if os_path.exists(bash_path):
                     if os_path.isdir(bash_path):
                         files_in_dir = [
-                            os_path.join(bash_path, f) for f in os_listdir(bash_path)
+                            os_path.join(bash_path, f)
+                            for f in os_listdir(bash_path)
                         ]
                         existing_files.extend(files_in_dir)
                     else:
                         existing_files.append(bash_path)
-            except Exception as e:
-                print(f"Error: error during reading object: {e}")
+            except Exception as exc:
+                raise SystemError(f"Error: error during reading object {bash_path}") from exc
 
         for bash_file in existing_files:
             try:
                 print(
                     f"Checking file {bash_file} against presence of $HOME/.local/bin in $PATH..."
                 )
-                with open(bash_file, "r") as f:
+                with open(bash_file, "r", encoding=self.textEncoding) as f:
                     for line in f:
-                        if re_compile(r"^PATH=.*\$HOME\/\.local\/bin").search(line):
+                        if re_compile(r"^PATH=.*\$HOME\/\.local\/bin").search(
+                            line
+                        ):
                             print(
                                 f"$HOME/.local/bin found in $PATH in file {bash_file}. Changes in $PATH not needed."
                             )
                             return True
-            except Exception as e:
-                print(f"Error: error during reading object {bash_file}: {e}")
+            except Exception as exc:
+                raise SystemError(
+                    f"Error: error during reading object {bash_file}"
+                ) from exc
 
         print(
             f"$HOME/.local/bin not found in $PATH in any of files. Adding changes to {self.default_bash_file}"
         )
         try:
-            with open(f"{self.default_bash_file}", "a") as f:
+            with open(
+                f"{self.default_bash_file}", "a", encoding=self.textEncoding
+            ) as f:
                 f.write(
                     '# Update added by pyresizer\nPATH="$HOME/.local/bin:$PATH"\nexport $PATH\n# End of pyresizer update\n\n'
                 )
             print("$PATH modified. Reload your bash please.")
             return True
-        except Exception as e:
-            raise SystemError(f"Error: error during writing object {self.default_bash_file}: {e}")
+        except Exception as exc:
+            raise SystemError(
+                f"Error: error during writing object {self.default_bash_file}"
+            ) from exc
 
     def _remove_from_linux_path(self):
 
         try:
             print("Removing application from $PATH...")
-            with open(f"{self.default_bash_file}", "r") as f:
+            with open(
+                f"{self.default_bash_file}", "r", encoding=self.textEncoding
+            ) as f:
                 file_content = f.read()
             # Get content and replace
             update_pattern = re_compile(
@@ -237,14 +254,16 @@ class InstallerUninstaller:
                 return True
 
             new_content = update_pattern.sub("", file_content)
-            with open(f"{self.default_bash_file}", "w") as f:
+            with open(
+                f"{self.default_bash_file}", "w", encoding=self.textEncoding
+            ) as f:
                 f.write(new_content)
             print("$PATH modified. Reload your bash please.")
             return True
-        except Exception as e:
+        except Exception as exc:
             raise SystemError(
-                f"Error: error during reading or writing object {self.default_bash_file}: {e}"
-            )
+                f"Error: error during reading or writing object {self.default_bash_file}"
+            ) from exc
 
     def copy_file(self):
 
@@ -313,7 +332,7 @@ class InstallerUninstaller:
 
 def main():
 
-    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stdout.reconfigure(encoding=InstallerUninstaller.textEncoding)
     script = os_path.basename(sys.argv[0])
     app_name = "pyresizer"
     desc = f"{app_name} 2.0.0. Script to quickly resize images."
@@ -329,12 +348,20 @@ def main():
     )
 
     parser.add_argument(
-        "-i", "--install", help="Install to the context menu", action="store_true"
+        "-i",
+        "--install",
+        help="Install to the context menu",
+        action="store_true",
     )
     parser.add_argument(
-        "-u", "--uninstall", help="Remove from the context menu", action="store_true"
+        "-u",
+        "--uninstall",
+        help="Remove from the context menu",
+        action="store_true",
     )
-    parser.add_argument("-x", "--width", help="New image width", type=int, default=1200)
+    parser.add_argument(
+        "-x", "--width", help="New image width", type=int, default=1200
+    )
     parser.add_argument(
         "-y", "--height", help="New image height", type=int, default=1600
     )
