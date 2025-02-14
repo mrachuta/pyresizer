@@ -196,7 +196,9 @@ class InstallerUninstaller:
                     else:
                         existing_files.append(bash_path)
             except Exception as exc:
-                raise SystemError(f"Error: error during reading object {bash_path}") from exc
+                raise SystemError(
+                    f"Error: error during reading object: {bash_path}"
+                ) from exc
 
         for bash_file in existing_files:
             try:
@@ -358,9 +360,6 @@ def main():
         "--uninstall",
         help="Remove from the context menu",
         action="store_true",
-    )
-    parser.add_argument(
-        "-x", "--width", help="New image width", type=int, default=1200
     )
     parser.add_argument(
         "-y", "--height", help="New image height", type=int, default=1600

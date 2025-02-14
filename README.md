@@ -28,9 +28,10 @@ App is aimed to:
 Just Python.
 
 Code was tested on following platforms:
-  - Windows 10 with Python 3.11.0 
-  - Windows 11 with Python 3.13.0
-  - Linux with Python 3.13.1
+  - Windows 10 with Python 3.9
+  - Windows 11 with Python 3.13
+  - Linux with Python 3.13
+  - Linux with Python 3.9
 
 Libraries required to run are available in *requirements.txt* file.
 
@@ -70,7 +71,7 @@ Libraries required to run are available in *requirements.txt* file.
 1. Perform following command to remove tool:
      - Windows
        ```
-       pyresizer.exe -ui
+       pyresizer.exe -u
        ```
        This command removes pyresizer from your App Data directory and the entry from the context menu.
      - Linux
