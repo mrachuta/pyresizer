@@ -21,6 +21,9 @@ jobs:
         with:
           extra_args: --results=verified,unknown
 
+      - name: Install packages
+        run: pip install -r requirements.txt
+
       - name: Run Python linter
         if: runner.os == 'Linux'
         uses: sunnysid3up/python-linter@master
