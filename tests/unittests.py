@@ -1,9 +1,9 @@
-import unittest
-from unittest.mock import patch, MagicMock
-from pyresizer import Resizer
-from pyresizer import InstallerUninstaller
-import sys
 import io
+import sys
+import unittest
+from unittest.mock import MagicMock, patch
+
+from pyresizer import InstallerUninstaller, Resizer
 
 # Unit tests generated with support of DeepSeek AI
 

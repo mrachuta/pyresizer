@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 
-import platform
 import argparse
+import platform
 import sys
-from re import compile as re_compile, MULTILINE as re_MULTILINE
-from shutil import copy2 as shutil_copy2, rmtree as shutil_rmtree
-from os import (
-    listdir as os_listdir,
-    path as os_path,
-    mkdir as os_mkdir,
-    remove as os_remove,
-)
-from PIL.Image import open as pil_open
+from os import listdir as os_listdir
+from os import mkdir as os_mkdir
+from os import path as os_path
+from os import remove as os_remove
+from re import MULTILINE as re_MULTILINE
+from re import compile as re_compile
+from shutil import copy2 as shutil_copy2
+from shutil import rmtree as shutil_rmtree
+
 from PIL.Image import Resampling as pil_Resampling
+from PIL.Image import open as pil_open
 
 if platform.system() == "Windows":
     import winreg
