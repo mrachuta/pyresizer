@@ -29,15 +29,14 @@ jobs:
       - name: Install packages
         run: pip install -r requirements.txt
 
-      - name: Run Python linter
+      - name: Run linter
         if: runner.os == 'Linux'
-        uses: sunnysid3up/python-linter@master
-        with:
-          source: "."
-          mypy-options: "--config-file pyproject.toml"
-          pylint-options: "--rcfile=pyproject.toml"
-          isort-options: "--check-only"
-          django: false
+        run: |
+          #!/usr/bin/env bash
+          set -xeu -o pipefail
+          mypy --config-file pyproject.toml
+          isort --check-only
+          pylint --rcfile=pyproject.toml
 
       - name: Run unit tests
         run: python -m unittest ./tests/unittests.py
