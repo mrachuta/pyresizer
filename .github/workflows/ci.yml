@@ -29,17 +29,25 @@ jobs:
       - name: Install packages
         run: pip install -r requirements.txt
 
-      - name: Run linter
+      - name: Run linters
         if: runner.os == 'Linux'
         run: |
           #!/usr/bin/env bash
           set -xeu -o pipefail
+          mkdir -p reports/{mypy,isort,pylint}
           mypy . --config-file pyproject.toml
-          isort . --check-only
-          pylint . --rcfile=pyproject.toml
+          isort . --check-only | tee -a reports/isort/isort.log
+          pylint . --rcfile=pyproject.toml | tee -a reports/pylint/pylint.log
 
       - name: Run unit tests
-        run: python -m unittest ./tests/unittests.py
+        if: runner.os == 'Linux'
+        run: coverage run -m unittest tests/unittests.py
+
+      - name: Check code coverage
+        if: runner.os == 'Linux'
+        run: |
+          coverage xml | true
+          coverage report -m
 
       - name: Run SCA scan
         if: runner.os == 'Linux'

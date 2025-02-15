@@ -10,6 +10,20 @@ source = ["pyresizer"]
 [tool.coverage.report]
 precision  = 2
 skip_empty = true
+fail_under = 60.00
+exclude_also = [
+    'def _remove_from_windows_context_menu',
+    'def _add_to_windows_context_menu',
+    'def _add_to_linux_path',
+    'def _remove_from_linux_path'
+]
+
+[tool.coverage.xml]
+output = "reports/coverage/coverage.xml"
+
+[tool.mypy]
+python_version = "3.9"
+cobertura_xml_report = "reports/mypy/"
 
 [tool.black]
 line-length = 88
@@ -19,9 +33,10 @@ include = '\.pyi?$'
 [tool.pylint.basic]
 recursive = true
 fail-under = 8
+reports = true
+output-format = "parseable,colorized"
 disable = ["C0116", "C0115", "C0114", "E0401"]
 
 [tool.isort]
-wrap_length = 88
-line_length = 88
 skip_gitignore = true
+profile = "black"
