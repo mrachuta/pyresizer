@@ -1,5 +1,3 @@
-import io
-import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
