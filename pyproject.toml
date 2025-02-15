@@ -34,7 +34,7 @@ include = '\.pyi?$'
 recursive = true
 fail-under = 8
 reports = true
-output-format = "parseable,colorized"
+output-format = "parseable"
 disable = ["C0116", "C0115", "C0114", "E0401"]
 
 [tool.isort]
