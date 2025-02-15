@@ -212,7 +212,8 @@ class InstallerUninstaller:
                             line
                         ):
                             print(
-                                f"$HOME/.local/bin found in $PATH in file {bash_file}. Changes in $PATH not needed."
+                                f"$HOME/.local/bin found in $PATH in file {bash_file}. " +
+                                "Changes in $PATH not needed."
                             )
                             return True
             except Exception as exc:
@@ -221,14 +222,16 @@ class InstallerUninstaller:
                 ) from exc
 
         print(
-            f"$HOME/.local/bin not found in $PATH in any of files. Adding changes to {self.default_bash_file}"
+            "$HOME/.local/bin not found in $PATH in any of files. " +
+            f"Adding changes to {self.default_bash_file}"
         )
         try:
             with open(
                 f"{self.default_bash_file}", "a", encoding=self.textEncoding
             ) as f:
                 f.write(
-                    '# Update added by pyresizer\nPATH="$HOME/.local/bin:$PATH"\nexport $PATH\n# End of pyresizer update\n\n'
+                    '# Update added by pyresizer\nPATH="$HOME/.local/bin:$PATH"\nexport $PATH\n' +
+                    '# End of pyresizer update\n\n'
                 )
             print("$PATH modified. Reload your bash please.")
             return True
@@ -247,7 +250,8 @@ class InstallerUninstaller:
                 file_content = f.read()
             # Get content and replace
             update_pattern = re_compile(
-                r'# Update added by pyresizer\nPATH="\$HOME/\.local/bin:\$PATH"\nexport \$PATH\n# End of pyresizer update\n\n',
+                r'# Update added by pyresizer\nPATH="\$HOME/\.local/bin:\$PATH"\nexport \$PATH\n' +
+                r'# End of pyresizer update\n\n',
                 re_MULTILINE,
             )
             if not update_pattern.search(file_content):
