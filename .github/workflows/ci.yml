@@ -50,6 +50,9 @@ jobs:
       - quality-checks
       - security-scans
     steps:
+      - name: Install packages
+        run: pip install -r requirements.txt
+
       - name: Build package
         run: pyinstaller -F pyresizer.py
     # TODO: Add step to create tar.gz and zip packages
