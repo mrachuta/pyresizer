@@ -30,13 +30,11 @@ jobs:
           coverage report -m
 
   quality-checks:
-    name: Run quality checks
     uses: ./.github/workflows/quality-checks.yml
     with:
       python_version: '3.9'
 
   security-scans:
-    name: Run security scans
     uses: ./.github/workflows/security-scans.yml
 
   build-package:
@@ -50,8 +48,16 @@ jobs:
       - quality-checks
       - security-scans
     steps:
-      - name: Install packages
-        run: pip install -r requirements.txt
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Initialize python
+        uses: actions/setup-python@v5
+        with:
+          # TODO: parametrize somehow?
+          python-version: '3.9'
 
       - name: Build package
         run: pyinstaller -F pyresizer.py
