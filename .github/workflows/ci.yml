@@ -33,13 +33,13 @@ jobs:
 
   quality-checks:
     name: Run quality checks
-    uses: ./.github/includes/quality-checks.yml
+    uses: ./.github/includes/quality-checks.yml@feature/add-github-pipelines
     with:
       python_version: ${{ env.PYTHON_VERSION }}
 
   security-scans:
     name: Run security scans
-    uses: ./.github/includes/security-scans.yml
+    uses: ./.github/includes/security-scans.yml@feature/add-github-pipelines
 
   build-package:
     name: Build package
