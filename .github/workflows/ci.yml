@@ -2,9 +2,6 @@ name: CI workflow
 run-name: CI workflow triggered by ${{ github.event_name }} to ${{ github.ref_name }}
 on: [workflow_dispatch]
 
-env:
-  PYTHON_VERSION: "3.9"
-
 jobs:
   unit-tests:
     name: Run unit tests
@@ -18,7 +15,8 @@ jobs:
       - name: Initialize python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          # TODO: parametrize somehow?
+          python-version: '3.9'
 
       - name: Install packages
         run: pip install -r requirements.txt
@@ -35,7 +33,7 @@ jobs:
     name: Run quality checks
     uses: ./.github/workflows/quality-checks.yml
     with:
-      python_version: ${{ env.PYTHON_VERSION }}
+      python_version: '3.9'
 
   security-scans:
     name: Run security scans
@@ -54,7 +52,7 @@ jobs:
     steps:
       - name: Build package
         run: pyinstaller -F pyresizer.py
-    # Add step to create tar.gz and zip packages
+    # TODO: Add step to create tar.gz and zip packages
 
   e2e-tests:
     name: Run e2e tests
