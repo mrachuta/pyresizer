@@ -52,6 +52,8 @@ jobs:
       - unit-tests
       - quality-checks
       - security-scans
+    outputs:
+      cache-key: ${{ steps.cache-binary-save.outputs.cache-primary-key }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -96,7 +98,7 @@ jobs:
         with:
           path: |
             ./dist
-          key: ${{ steps.cache-binary-save.outputs.cache-primary-key }}
+          key: ${{ needs.build-package.outputs.cache-key }}
 
       - name: Initialize python
         uses: actions/setup-python@v5
