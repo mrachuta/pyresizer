@@ -2,8 +2,7 @@ name: CI workflow
 run-name: CI workflow triggered by ${{ github.event_name }} to ${{ github.ref_name }}
 on: [workflow_dispatch]
 
-env:
-  PYTHON_VERSION: '3.9'
+# variable PYTHON_VERSION have to be defined at repository level
 
 jobs:
   unit-tests:
@@ -19,7 +18,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           # TODO: parametrize somehow?
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ vars.PYTHON_VERSION }}
 
       - name: Install packages
         run: pip install -r requirements.txt
@@ -36,7 +35,7 @@ jobs:
     name: Call quality checks workflow
     uses: ./.github/workflows/quality-checks.yml
     with:
-      python_version: ${{ env.PYTHON_VERSION }}
+      python_version: ${{ vars.PYTHON_VERSION }}
 
   security-scans:
     name: Call security scans workflow
@@ -62,7 +61,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           # TODO: parametrize somehow?
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ vars.PYTHON_VERSION }}
 
       - name: Install packages
         run: pip install -r requirements.txt
@@ -87,7 +86,7 @@ jobs:
       - name: Initialize python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ vars.PYTHON_VERSION }}
 
       - name: Install packages
         run: pip install -r requirements.txt
