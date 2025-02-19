@@ -17,8 +17,9 @@ jobs:
       - name: Initialize python
         uses: actions/setup-python@v5
         with:
-          # TODO: parametrize somehow?
           python-version: ${{ vars.PYTHON_VERSION }}
+          # Wrapper for actions/cache@v3
+          cache: 'pip-cache'
 
       - name: Install packages
         run: pip install -r requirements.txt
@@ -60,15 +61,22 @@ jobs:
       - name: Initialize python
         uses: actions/setup-python@v5
         with:
-          # TODO: parametrize somehow?
           python-version: ${{ vars.PYTHON_VERSION }}
+          cache: 'pip-cache'
 
       - name: Install packages
         run: pip install -r requirements.txt
 
       - name: Build package
         run: pyinstaller -F pyresizer.py
-    # TODO: Add step to create tar.gz and zip packages
+
+      - name: Cache binary
+        id: cache-binary-save
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/dist
+          key: ${{ runner.os }}-cache-pyresizer-binary-${{ hashFiles('**/dist/pyresizer*') }}
 
   e2e-tests:
     name: Run e2e tests
@@ -83,10 +91,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Restore cached binary
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/dist
+          key: ${{ steps.cache-binary-save.outputs.cache-primary-key }}
+
       - name: Initialize python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ vars.PYTHON_VERSION }}
+          cache: 'pip-cache'
 
       - name: Install packages
         run: pip install -r requirements.txt
