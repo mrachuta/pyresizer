@@ -104,6 +104,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
+          path: dist
           name: pyresizer-binary-${{ runner.os }}
 
       - name: Run binary (Linux)
