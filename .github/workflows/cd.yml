@@ -1,0 +1,14 @@
+name: CD workflow
+run-name: CD workflow triggered by ${{ github.event_name }} to ${{ github.ref_name }}
+on: 
+  - workflow_dispatch
+
+jobs:
+  example:
+    name: Example
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
