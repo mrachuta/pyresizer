@@ -75,7 +75,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: |
-            ~/dist
+            ./dist
           key: ${{ runner.os }}-cache-pyresizer-binary-${{ hashFiles('**/dist/pyresizer*') }}
 
   e2e-tests:
@@ -95,7 +95,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: |
-            ~/dist
+            ./dist
           key: ${{ steps.cache-binary-save.outputs.cache-primary-key }}
 
       - name: Initialize python
