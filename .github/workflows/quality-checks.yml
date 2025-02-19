@@ -2,11 +2,8 @@ name: Quality checks workflow
 
 on:
   workflow_call:
-    inputs:
-      python_version:
-        type: string
-        description: "Provide python version in format x.y"
-        required: true
+
+# variable PYTHON_VERSION have to be defined at repository level
 
 jobs:
   quality-checks:
@@ -21,7 +18,7 @@ jobs:
       - name: Initialize python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ inputs.python_version }}
+          python-version: ${{ vars.PYTHON_VERSION }}
           cache: 'pip'
 
       - name: Install packages

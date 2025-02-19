@@ -1,6 +1,7 @@
 name: CI workflow
 run-name: CI workflow triggered by ${{ github.event_name }} to ${{ github.ref_name }}
 on: 
+  - workflow_call
   - workflow_dispatch
   - push
 
@@ -37,82 +38,7 @@ jobs:
   quality-checks:
     name: Call quality checks workflow
     uses: ./.github/workflows/quality-checks.yml
-    with:
-      python_version: ${{ vars.PYTHON_VERSION }}
 
   security-scans:
     name: Call security scans workflow
     uses: ./.github/workflows/security-scans.yml
-
-  build-package:
-    name: Build package
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    needs:
-      - unit-tests
-      - quality-checks
-      - security-scans
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Initialize python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ vars.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Install packages
-        run: pip install -r requirements.txt
-
-      - name: Build package
-        run: pyinstaller -F pyresizer.py
-
-      - name: Upload artifact
-        id: artifact-upload-step
-        uses: actions/upload-artifact@v4
-        with:
-          name: pyresizer-binary-${{ runner.os }}
-          path: dist
-          retention-days: 2
-          overwrite: true
-
-  e2e-tests:
-    name: Run e2e tests
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    needs: build-package
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Initialize python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ vars.PYTHON_VERSION }}
-          cache: 'pip'
-
-      - name: Install packages
-        run: pip install -r requirements.txt
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          path: dist
-          name: pyresizer-binary-${{ runner.os }}
-
-      - name: Run binary (Linux)
-        if: runner.os == 'Linux'
-        run: chmod +x ./dist/pyresizer && ./dist/pyresizer -h
-
-      - name: Run binary (Windows)
-        if: runner.os == 'Windows'
-        run: ./dist/pyresizer.exe -h
