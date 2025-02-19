@@ -109,7 +109,7 @@ jobs:
 
       - name: Run binary (Linux)
         if: runner.os == 'Linux'
-        run: ./dist/pyresizer -h
+        run: chmod +x && ./dist/pyresizer -h
 
       - name: Run binary (Windows)
         if: runner.os == 'Windows'
