@@ -1,6 +1,8 @@
 name: CI workflow
 run-name: CI workflow triggered by ${{ github.event_name }} to ${{ github.ref_name }}
-on: [workflow_dispatch]
+on: 
+  - workflow_dispatch
+  - push
 
 # variable PYTHON_VERSION have to be defined at repository level
 
@@ -109,7 +111,7 @@ jobs:
 
       - name: Run binary (Linux)
         if: runner.os == 'Linux'
-        run: chmod +x && ./dist/pyresizer -h
+        run: chmod +x ./dist/pyresizer && ./dist/pyresizer -h
 
       - name: Run binary (Windows)
         if: runner.os == 'Windows'
