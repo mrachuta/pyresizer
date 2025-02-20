@@ -1,3 +1,4 @@
+import os
 import platform
 import subprocess
 import unittest
@@ -7,7 +8,7 @@ class TestE2E(unittest.TestCase):
 
     def setUp(self):
         self.subprocess_required_args = {
-            "cwd": "./dist/",
+            "cwd": f"{os.path.join(os.path.dirname(os.path.abspath(__file__)), '../dist/')}",
             "capture_output": True,
             "text": True,
         }
