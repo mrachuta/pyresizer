@@ -27,13 +27,8 @@ jobs:
       - name: Install packages
         run: pip install -r requirements.txt
 
-      - name: Run unit tests
-        run: coverage run -m unittest tests/unittests.py
-
-      - name: Check code coverage
-        run: |
-          coverage xml | true
-          coverage report -m
+      - name: Run unit tests and code coverage check
+        run: pytest --cov-report term --cov-report xml --cov=pyresizer tests/unittests.py
 
   quality-checks:
     name: Call quality checks workflow
