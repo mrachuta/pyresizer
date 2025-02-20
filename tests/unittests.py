@@ -1,5 +1,10 @@
+import sys
+import os
 import unittest
 from unittest.mock import MagicMock, patch
+
+# Add root directory to sys.path so we can import pyresizer
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from pyresizer import InstallerUninstaller, Resizer
 

@@ -3,6 +3,9 @@ name = "pyresizer"
 description = "Script to quickly resize images."
 requires-python = ">=3.9"
 
+[tool.pytest.ini_options]
+addopts = "-v --doctest-modules"
+
 [tool.coverage.run]
 branch = true
 source = ["pyresizer"]

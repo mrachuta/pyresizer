@@ -34,8 +34,7 @@ class Resizer:
         return [
             str(i)
             for i in os_listdir()
-            if os_path.isfile(i)
-            and any(x in i.lower() for x in self.img_formats)
+            if os_path.isfile(i) and any(x in i.lower() for x in self.img_formats)
         ]
 
     def make_backups(self):
@@ -118,9 +117,7 @@ class InstallerUninstaller:
         if platform.system() == "Windows":
             try:
                 print("Removing application from context menu registry keys...")
-                winreg.DeleteKey(
-                    winreg.HKEY_CURRENT_USER, f"{self.reg_path}\\command"
-                )
+                winreg.DeleteKey(winreg.HKEY_CURRENT_USER, f"{self.reg_path}\\command")
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, self.reg_path)
                 print("Registry keys removed.")
                 return True
@@ -136,12 +133,8 @@ class InstallerUninstaller:
         if platform.system() == "Windows":
             try:
                 print("Adding application to context menu registry keys...")
-                reg_key = winreg.CreateKey(
-                    winreg.HKEY_CURRENT_USER, self.reg_path
-                )
-                winreg.SetValue(
-                    reg_key, None, winreg.REG_SZ, "Use pyresizer here"
-                )
+                reg_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, self.reg_path)
+                winreg.SetValue(reg_key, None, winreg.REG_SZ, "Use pyresizer here")
                 # Registry key for icon
                 winreg.SetValueEx(
                     reg_key,
@@ -190,8 +183,7 @@ class InstallerUninstaller:
                 if os_path.exists(bash_path):
                     if os_path.isdir(bash_path):
                         files_in_dir = [
-                            os_path.join(bash_path, f)
-                            for f in os_listdir(bash_path)
+                            os_path.join(bash_path, f) for f in os_listdir(bash_path)
                         ]
                         existing_files.extend(files_in_dir)
                     else:
@@ -208,12 +200,10 @@ class InstallerUninstaller:
                 )
                 with open(bash_file, "r", encoding=self.textEncoding) as f:
                     for line in f:
-                        if re_compile(r"^PATH=.*\$HOME\/\.local\/bin").search(
-                            line
-                        ):
+                        if re_compile(r"^PATH=.*\$HOME\/\.local\/bin").search(line):
                             print(
-                                f"$HOME/.local/bin found in $PATH in file {bash_file}. " +
-                                "Changes in $PATH not needed."
+                                f"$HOME/.local/bin found in $PATH in file {bash_file}. "
+                                + "Changes in $PATH not needed."
                             )
                             return True
             except Exception as exc:
@@ -222,16 +212,17 @@ class InstallerUninstaller:
                 ) from exc
 
         print(
-            "$HOME/.local/bin not found in $PATH in any of files. " +
-            f"Adding changes to {self.default_bash_file}"
+            "$HOME/.local/bin not found in $PATH in any of files. "
+            + f"Adding changes to {self.default_bash_file}"
         )
         try:
             with open(
                 f"{self.default_bash_file}", "a", encoding=self.textEncoding
             ) as f:
                 f.write(
-                    '# Update added by pyresizer\nPATH="$HOME/.local/bin:$PATH"\nexport $PATH\n' +
-                    '# End of pyresizer update\n\n'
+                    "# Update added by pyresizer\n"
+                    + 'PATH="$HOME/.local/bin:$PATH"\nexport $PATH\n'
+                    + "# End of pyresizer update\n\n"
                 )
             print("$PATH modified. Reload your bash please.")
             return True
@@ -250,8 +241,9 @@ class InstallerUninstaller:
                 file_content = f.read()
             # Get content and replace
             update_pattern = re_compile(
-                r'# Update added by pyresizer\nPATH="\$HOME/\.local/bin:\$PATH"\nexport \$PATH\n' +
-                r'# End of pyresizer update\n\n',
+                r"# Update added by pyresizer\n"
+                + r'PATH="\$HOME/\.local/bin:\$PATH"\nexport \$PATH\n'
+                + r"# End of pyresizer update\n\n",
                 re_MULTILINE,
             )
             if not update_pattern.search(file_content):
