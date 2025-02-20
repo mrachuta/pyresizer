@@ -15,7 +15,7 @@ class TestE2E(unittest.TestCase):
         if platform.system() == "Windows":
             self.executable = "pyresizer.exe"
         elif platform.system() == "Linux":
-            self.executable = "pyresizer"
+            self.executable = "./pyresizer"
         else:
             raise SystemError("Error: cannot continue E2E tests. Unsupported platform.")
 
