@@ -7,7 +7,7 @@ class TestE2E(unittest.TestCase):
 
     def setUp(self):
         self.subprocess_required_args = {
-            "cwd": "dist",
+            "cwd": "./dist",
             "capture_output": True,
             "text": True,
         }
