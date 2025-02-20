@@ -1,8 +1,9 @@
 import os
-import sys
 import platform
 import subprocess
+import sys
 import unittest
+
 
 class TestE2E(unittest.TestCase):
 
@@ -12,7 +13,7 @@ class TestE2E(unittest.TestCase):
             "capture_output": True,
             "text": True,
             "shell": True,
-            "encoding": "utf-8"
+            "encoding": "utf-8",
         }
         if platform.system() == "Windows":
             self.executable = "pyresizer.exe"
