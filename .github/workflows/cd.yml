@@ -78,3 +78,6 @@ jobs:
       - name: Run binary (Windows)
         if: runner.os == 'Windows'
         run: ./dist/pyresizer.exe -h
+
+      - name: Run E2E tests
+        run: pytest tests/e2etests.py
