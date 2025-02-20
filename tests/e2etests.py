@@ -1,8 +1,8 @@
 import os
+import sys
 import platform
 import subprocess
 import unittest
-
 
 class TestE2E(unittest.TestCase):
 
@@ -11,6 +11,8 @@ class TestE2E(unittest.TestCase):
             "cwd": f"{os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'dist')}",
             "capture_output": True,
             "text": True,
+            "shell": True,
+            "encoding": "utf-8"
         }
         if platform.system() == "Windows":
             self.executable = "pyresizer.exe"
