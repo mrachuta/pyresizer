@@ -116,7 +116,7 @@ jobs:
             let jobsCheckMessage = null;
             let jobsCheckResult = null;
 
-            if (targetBranch !== 'mastero') {
+            if (targetBranch !== 'master') {
               labelCheckResult = 'success';
               labelCheckMessage = '✅ PR label check not required, target branch is not master';
             } else if (matchingLabels.length === 1) {
