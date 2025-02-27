@@ -105,6 +105,7 @@ jobs:
             const name = '${{ github.workflow }}';
             const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
 
+            const targetBranch = context.payload.pull_request.base.ref;
             const labels = context.payload.pull_request.labels.map(label => label.name);
             const validLabels = ['major', 'minor', 'bugfix'];
             const matchingLabels = labels.filter(label => validLabels.includes(label));
@@ -115,7 +116,10 @@ jobs:
             let jobsCheckMessage = null;
             let jobsCheckResult = null;
 
-            if (matchingLabels.length === 1) {
+            if (targetBranch !== 'mastero') {
+              labelCheckResult = 'success';
+              labelCheckMessage = '✅ PR label check not required, target branch is not master';
+            } else if (matchingLabels.length === 1) {
               labelCheckResult = 'success';
               labelCheckMessage = `✅ PR contains exactly one valid label: ${matchingLabels[0]}`;
             } else if (matchingLabels.length === 0) {
