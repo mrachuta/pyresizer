@@ -90,16 +90,16 @@ jobs:
         run: pytest tests/e2etests.py
 
   validate-pr:
-    name: Validate PR
+    name: Validate pull request
     runs-on: "ubuntu-latest"
     needs:
       - ci
       - build-package
       - e2e-tests
     steps:
-      - name: Add comment to PR
+      - name: Check pull request
         uses: actions/github-script@v7
-        id: workflowstatus
+        id: checkpr
         with:
           script: |
             const name = '${{ github.workflow }}';
@@ -164,12 +164,12 @@ jobs:
               body: body
             });
 
-            core.setOutput('workflowresult', validationResult);
+            core.setOutput('prresult', validationResult);
 
-      - name: Set latest commit status as ${{ steps.workflowstatus.outputs.result }}
+      - name: Set pull requests' latest commit status as ${{ steps.checkpr.outputs.prresult }}
         uses: myrotvorets/set-commit-status-action@master
         with:
           sha: ${{ needs.checkout.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          status: ${{ steps.workflowstatus.outputs.workflowresult }}
+          status: ${{ steps.checkpr.outputs.prresult }}
       
