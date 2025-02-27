@@ -166,7 +166,7 @@ jobs:
 
             core.setOutput('prresult', validationResult);
 
-      - name: Set pull requests' latest commit status as ${{ steps.checkpr.outputs.prresult }}
+      - name: Set pull request's latest commit status as ${{ steps.checkpr.outputs.prresult }}
         uses: myrotvorets/set-commit-status-action@master
         with:
           sha: ${{ needs.checkout.outputs.head_sha }}

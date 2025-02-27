@@ -358,6 +358,7 @@ def main():
         help="Remove from the context menu",
         action="store_true",
     )
+    parser.add_argument("-x", "--width", help="New image width", type=int, default=1200)
     parser.add_argument(
         "-y", "--height", help="New image height", type=int, default=1600
     )
