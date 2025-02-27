@@ -106,11 +106,11 @@ jobs:
             const validLabels = ['major', 'minor', 'bugfix'];
             const matchingLabels = labels.filter(label => validLabels.includes(label));
             
-            const labelCheckResult = null;
-            const labelCheckMessage = null;
+            let labelCheckResult = null;
+            let labelCheckMessage = null;
 
-            const jobsCheckMessage = null;
-            const jobsCheckResult = null;
+            let jobsCheckMessage = null;
+            let jobsCheckResult = null;
 
             if (matchingLabels.length === 1) {
               labelCheckResult = 'success';
