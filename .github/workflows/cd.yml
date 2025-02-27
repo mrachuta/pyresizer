@@ -1,7 +1,14 @@
 name: CD workflow
 run-name: CD workflow triggered by ${{ github.event_name }} to ${{ github.ref_name }}
-on: 
-  - workflow_dispatch
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request_target:
+    types:
+      - assigned
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
   ci:
@@ -26,7 +33,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ vars.PYTHON_VERSION }}
-          cache: 'pip'
+          cache: "pip"
 
       - name: Install packages
         run: pip install -r requirements.txt
@@ -60,7 +67,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ vars.PYTHON_VERSION }}
-          cache: 'pip'
+          cache: "pip"
 
       - name: Install packages
         run: pip install -r requirements.txt
@@ -71,13 +78,84 @@ jobs:
           path: dist
           name: pyresizer-binary-${{ runner.os }}
 
-      - name: Run binary (Linux)
+      - name: Check binary (Linux)
         if: runner.os == 'Linux'
         run: chmod +x ./dist/pyresizer && ./dist/pyresizer -h
 
-      - name: Run binary (Windows)
+      - name: Check binary (Windows)
         if: runner.os == 'Windows'
         run: ./dist/pyresizer.exe -h
 
       - name: Run E2E tests
         run: pytest tests/e2etests.py
+
+  validate-pr:
+    name: Validate PR
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Add comment to PR
+        uses: actions/github-script@v7
+        id: workflowstatus
+        with:
+          script: |
+            const name = '${{ github.workflow }}';
+            const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
+
+            const labels = context.payload.pull_request.labels.map(label => label.name);
+            const validLabels = ['major', 'minor', 'bugfix'];
+            const matchingLabels = labels.filter(label => validLabels.includes(label));
+
+            if (matchingLabels.length === 1) {
+              const labelCheckResult = 'success';
+              const labelCheckMessage = `✅ PR contains exactly one valid label: ${matchingLabels[0]}`;
+            } else if (matchingLabels.length === 0) {
+              const labelCheckResult = 'failure';
+              const labelCheckMessage = '❌ PR must contain exactly one of the required labels: major, minor, or bugfix.';
+            } else {
+              const labelCheckResult = 'failure';
+              const labelCheckMessage = `❌ PR contains multiple valid labels (${matchingLabels.join(', ')}). Only one is allowed.`;
+            }
+            console.log(`${labelCheckMessage}`);
+
+            const ciResult = '${{ needs.ci.result }}';
+            const buildPackageResult = '${{ needs.build-package.result }}';
+            const e2eTestsResult = '${{ needs.e2e-tests.result }}';
+
+            const failedJobs = [];
+
+            if (ciResult !== 'success') failedJobs.push('CI');
+            if (buildPackageResult !== 'success') failedJobs.push('Build Package');
+            if (e2eTestsResult !== 'success') failedJobs.push('E2E Tests');
+
+            if (failedJobs.length > 0) {
+              const jobsCheckMessage = `❌ The following jobs (or job) failed: ${failedJobs.join(', ')}`;
+              const jobsCheckResult = 'failure';
+            } else {
+              const jobsCheckMessage = '✅ All required jobs passed.';
+              const jobsCheckResult = 'success';
+            }
+            console.log(`${jobsCheckMessage}`);
+
+            const validationResult = (
+              `${jobsCheckResult}` === 'success' && 
+              `${labelCheckResult}` === 'success'
+            ) ? 'success' : 'failure';
+
+            const body = `${name}: ${validationResult === 'success' ? 'succeeded ✅' : 'failed ❌'}\n${labelCheckMessage}\n${jobsCheckMessage}\n${url}`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+            core.setOutput('workflowresult', validationResult);
+
+      - name: Set latest commit status as ${{ steps.workflowstatus.outputs.result }}
+        uses: myrotvorets/set-commit-status-action@master
+        with:
+          sha: ${{ needs.checkout.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ steps.workflowstatus.outputs.workflowresult }}
+      
