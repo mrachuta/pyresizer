@@ -118,16 +118,16 @@ jobs:
 
             if (targetBranch !== 'master') {
               labelCheckResult = 'success';
-              labelCheckMessage = '✅ PR label check not required, target branch is not master';
+              labelCheckMessage = 'PR label check not required, target branch is not master ✅';
             } else if (matchingLabels.length === 1) {
               labelCheckResult = 'success';
-              labelCheckMessage = `✅ PR contains exactly one valid label: ${matchingLabels[0]}`;
+              labelCheckMessage = `PR contains exactly one valid label: ${matchingLabels[0]} ✅`;
             } else if (matchingLabels.length === 0) {
               labelCheckResult = 'failure';
-              labelCheckMessage = '❌ PR must contain exactly one of the required labels: major, minor, or bugfix.';
+              labelCheckMessage = 'PR must contain exactly one of the required labels: major, minor, or bugfix. ❌';
             } else {
               labelCheckResult = 'failure';
-              labelCheckMessage = `❌ PR contains multiple valid labels (${matchingLabels.join(', ')}). Only one is allowed.`;
+              labelCheckMessage = `PR contains multiple valid labels (${matchingLabels.join(', ')}). Only one is allowed. ❌`;
             }
             console.log(`${labelCheckMessage}`);
 
@@ -142,10 +142,10 @@ jobs:
             if (e2eTestsResult !== 'success') failedJobs.push('E2E Tests');
 
             if (failedJobs.length > 0) {
-              jobsCheckMessage = `❌ The following jobs (or job) failed: ${failedJobs.join(', ')}`;
+              jobsCheckMessage = `The following jobs (or job) failed: ${failedJobs.join(', ')} ❌`;
               jobsCheckResult = 'failure';
             } else {
-              jobsCheckMessage = '✅ All required jobs passed.';
+              jobsCheckMessage = 'All required jobs finished with status success ✅';
               jobsCheckResult = 'success';
             }
             console.log(`${jobsCheckMessage}`);
@@ -155,7 +155,7 @@ jobs:
               `${labelCheckResult}` === 'success'
             ) ? 'success' : 'failure';
 
-            const body = `${name}: ${validationResult === 'success' ? 'succeeded ✅' : 'failed ❌'}\n${labelCheckMessage}\n${jobsCheckMessage}\n${url}`;
+            const body = `${name}: ${validationResult === 'success' ? 'succeeded ✅' : 'failed ❌'}\n- ${labelCheckMessage}\n- ${jobsCheckMessage}\n${url}`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
