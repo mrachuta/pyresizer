@@ -92,6 +92,7 @@ jobs:
   validate-pr:
     name: Validate PR
     runs-on: "ubuntu-latest"
+    needs: e2e-tests
     steps:
       - name: Add comment to PR
         uses: actions/github-script@v7
@@ -104,16 +105,22 @@ jobs:
             const labels = context.payload.pull_request.labels.map(label => label.name);
             const validLabels = ['major', 'minor', 'bugfix'];
             const matchingLabels = labels.filter(label => validLabels.includes(label));
+            
+            const labelCheckResult = null;
+            const labelCheckMessage = null;
+
+            const jobsCheckMessage = null;
+            const jobsCheckResult = null;
 
             if (matchingLabels.length === 1) {
-              const labelCheckResult = 'success';
-              const labelCheckMessage = `✅ PR contains exactly one valid label: ${matchingLabels[0]}`;
+              labelCheckResult = 'success';
+              labelCheckMessage = `✅ PR contains exactly one valid label: ${matchingLabels[0]}`;
             } else if (matchingLabels.length === 0) {
-              const labelCheckResult = 'failure';
-              const labelCheckMessage = '❌ PR must contain exactly one of the required labels: major, minor, or bugfix.';
+              labelCheckResult = 'failure';
+              labelCheckMessage = '❌ PR must contain exactly one of the required labels: major, minor, or bugfix.';
             } else {
-              const labelCheckResult = 'failure';
-              const labelCheckMessage = `❌ PR contains multiple valid labels (${matchingLabels.join(', ')}). Only one is allowed.`;
+              labelCheckResult = 'failure';
+              labelCheckMessage = `❌ PR contains multiple valid labels (${matchingLabels.join(', ')}). Only one is allowed.`;
             }
             console.log(`${labelCheckMessage}`);
 
@@ -128,11 +135,11 @@ jobs:
             if (e2eTestsResult !== 'success') failedJobs.push('E2E Tests');
 
             if (failedJobs.length > 0) {
-              const jobsCheckMessage = `❌ The following jobs (or job) failed: ${failedJobs.join(', ')}`;
-              const jobsCheckResult = 'failure';
+              jobsCheckMessage = `❌ The following jobs (or job) failed: ${failedJobs.join(', ')}`;
+              jobsCheckResult = 'failure';
             } else {
-              const jobsCheckMessage = '✅ All required jobs passed.';
-              const jobsCheckResult = 'success';
+              jobsCheckMessage = '✅ All required jobs passed.';
+              jobsCheckResult = 'success';
             }
             console.log(`${jobsCheckMessage}`);
 
