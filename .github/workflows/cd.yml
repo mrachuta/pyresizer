@@ -3,7 +3,7 @@ run-name: CD workflow triggered by ${{ github.event_name }} to ${{ github.ref_na
 on:
   workflow_call:
   workflow_dispatch:
-  pull_request_target:
+  pull_request:
     types:
       - assigned
       - opened
