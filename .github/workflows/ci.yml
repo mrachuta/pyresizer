@@ -1,9 +1,9 @@
 name: CI workflow
 run-name: CI workflow triggered by ${{ github.event_name }} to ${{ github.ref_name }}
 on: 
-  - workflow_call
-  - workflow_dispatch
-  - push
+  workflow_call:
+  workflow_dispatch:
+  push:
 
 # variable PYTHON_VERSION have to be defined at repository level
 
