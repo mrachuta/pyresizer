@@ -145,3 +145,4 @@ jobs:
           generateReleaseNotes: true
           commit: ${{ github.sha }}
           name: ${{ steps.calculatetag.outputs.new_tag }}
+          tag: ${{ steps.calculatetag.outputs.new_tag }}
