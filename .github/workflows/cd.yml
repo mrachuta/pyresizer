@@ -106,8 +106,8 @@ jobs:
             const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
 
             const targetBranch = context.payload.pull_request.base.ref;
-            const labels = context.payload.pull_request.labels.map(label => label.name);
-            const validLabels = ['major', 'minor', 'bugfix'];
+            const labels = context.payload.pull_request.labels.map(label => label.name.toLowerCase());
+            const validLabels = ['major', 'minor', 'patch'];
             const matchingLabels = labels.filter(label => validLabels.includes(label));
             
             let labelCheckResult = null;
@@ -124,10 +124,10 @@ jobs:
               labelCheckMessage = `PR contains exactly one valid label: ${matchingLabels[0]} ✅`;
             } else if (matchingLabels.length === 0) {
               labelCheckResult = 'failure';
-              labelCheckMessage = 'PR must contain exactly one of the required labels: major, minor, or bugfix. ❌';
+              labelCheckMessage = 'PR must contain exactly one of the required labels: (${validLabels.join(', ')}). ❌';
             } else {
               labelCheckResult = 'failure';
-              labelCheckMessage = `PR contains multiple valid labels (${matchingLabels.join(', ')}). Only one is allowed. ❌`;
+              labelCheckMessage = `PR contains multiple valid labels: (${matchingLabels.join(', ')}). Only one is allowed. ❌`;
             }
             console.log(`${labelCheckMessage}`);
 
@@ -165,6 +165,8 @@ jobs:
             });
 
             core.setOutput('prresult', validationResult);
+
+            // Do not fail build in case of troubles - set commit status in next step
 
       - name: Set pull request's latest commit status as ${{ steps.checkpr.outputs.prresult }}
         uses: myrotvorets/set-commit-status-action@master
