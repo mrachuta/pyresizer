@@ -143,4 +143,5 @@ jobs:
           artifacts: "pyresizer-${{ steps.calculatetag.outputs.new_tag }}-linux-x64.tar,pyresizer-${{ steps.calculatetag.outputs.new_tag }}-windows-x64.zip"
           body: "New release ${{ steps.calculatetag.outputs.new_tag }}"
           generateReleaseNotes: true
-          # tag and name are defaults
+          commit: ${{ github.sha }}
+          name: ${{ steps.calculatetag.outputs.new_tag }}
