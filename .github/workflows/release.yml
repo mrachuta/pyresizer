@@ -81,6 +81,7 @@ jobs:
             core.setOutput("pr_label", matchingLabels[0]);
 
       - name: Calculate new tag
+        id: calculatetag
         run: |
           #!/usr/bin/env bash
           set -xeu -o pipefail
@@ -126,7 +127,20 @@ jobs:
           echo "new_tag=${NEW_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Create packages
-        run: echo hello
+        run: |
+          #!/usr/bin/env bash
+          set -xeu -o pipefail
+
+          NEW_TAG=${{ steps.calculatetag.outputs.new_tag }}
+          echo "Create Linux release..."
+          tar -cvf "pyresizer-${NEW_TAG}-linux-x64.tar" binaries/pyresizer-binary-Linux/*
+          echo "Create Windows release..."
+          zip -vr "pyresizer-${NEW_TAG}-windows-x64.zip" binaries/pyresizer-binary-Windows/*
 
       - name: Create Github release
-        run: echo hello
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "pyresizer-${{ steps.calculatetag.outputs.new_tag }}-linux-x64.tar,pyresizer-${{ steps.calculatetag.outputs.new_tag }}-windows-x64.zip"
+          body: "New release ${{ steps.calculatetag.outputs.new_tag }}"
+          generateReleaseNotes: true
+          # tag and name are defaults
