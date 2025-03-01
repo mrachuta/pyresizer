@@ -53,7 +53,7 @@ jobs:
             });
 
             const validLabels = ["major", "minor", "patch"];
-            const labels = pr.labels.map(label => label.name.toLowerCase());
+            const labels = pr.labels.map(label => label.name.toLowerCase()) || [];
 
             const matchingLabels = labels.filter(label => validLabels.includes(label));
 

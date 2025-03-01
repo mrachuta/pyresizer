@@ -106,7 +106,7 @@ jobs:
             const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
 
             const targetBranch = context.payload.pull_request.base.ref;
-            const labels = context.payload.pull_request.labels.map(label => label.name.toLowerCase());
+            const labels = context.payload.pull_request.labels.map(label => label.name.toLowerCase()) || [];
             const validLabels = ['major', 'minor', 'patch'];
             const matchingLabels = labels.filter(label => validLabels.includes(label));
             
