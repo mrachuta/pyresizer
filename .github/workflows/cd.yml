@@ -92,6 +92,8 @@ jobs:
   validate-pr:
     name: Validate pull request
     runs-on: "ubuntu-latest"
+    # Skip for release builds
+    if: github.event_name == 'pull_request'
     needs:
       - ci
       - build-bins
@@ -170,6 +172,7 @@ jobs:
 
       - name: Set pull request's latest commit status as ${{ steps.checkpr.outputs.prresult }}
         uses: myrotvorets/set-commit-status-action@master
+        if: github.event_name == 'pull_request'
         with:
           sha: ${{ needs.checkout.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
