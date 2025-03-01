@@ -104,7 +104,7 @@ jobs:
             next_major_version="v$((major + 1)).0.0"
             next_minor_version="v${major}.$((minor + 1)).0"
             next_patch_version="v${major}.${minor}.$((patch + 1))"
-            case RELEASE_TYPE in
+            case "$RELEASE_TYPE" in
               "major") NEW_TAG=$next_major_version ;;
               "minor") NEW_TAG=$next_minor_version ;;
               "patch") NEW_TAG=$next_patch_version ;;
