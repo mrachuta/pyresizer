@@ -109,6 +109,7 @@ jobs:
               "minor") NEW_TAG=$next_minor_version ;;
               "patch") NEW_TAG=$next_patch_version ;;
               *) echo "Unknow release type ${RELEASE_TYPE}" && exit 102
+            esac
           fi
           echo "Saving NEW_TAG to Github variables..."
           echo "new_tag=${NEW_TAG}" >> $GITHUB_OUTPUT
