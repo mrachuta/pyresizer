@@ -41,7 +41,7 @@ jobs:
             exit 101
           fi
           echo "Saving LATEST_PR_ID to Github variables..."
-          echo "latest_pr_id=${LATEST_PR_ID}" >> $GITHUB_OUTPUT
+          echo "latest_pr_id=${LATEST_PR_ID}" >> "$GITHUB_OUTPUT"
 
       - name: Get release type
         uses: actions/github-script@v7
@@ -87,23 +87,30 @@ jobs:
 
           # Convert to lower case
           RELEASE_TYPE=$(echo ${{ steps.releasetype.outputs.pr_label }} | tr '[:upper:]' '[:lower:]')
+          PREFIXED_TAG=false
           if [[ -z $RELEASE_TYPE ]]; then
             echo "ERROR: Unable to determine release type!"
             exit 101
           fi
 
-          CURRENT_TAGS=($(git tag --sort=-v:refname))
+          mapfile CURRENT_TAGS < <(git tag --sort=-v:refname)
 
-          if [[ -z $CURRENT_TAGS ]]; then
+          if [[ ${#CURRENT_TAGS[@]} == 0 ]]; then
             echo "No tags found, creating initial tag: v1.0.0"
             NEW_TAG='v1.0.0'
           else
-            echo "Following tags were found: ${CURRENT_TAGS[@]}"
+            echo "Following tags were found: " "${CURRENT_TAGS[@]}"
             echo "Latest tag is: ${CURRENT_TAGS[0]}"
-            IFS='.' read -r major minor patch <<< "${CURRENT_TAGS[0]}"
-            next_major_version="v$((major + 1)).0.0"
-            next_minor_version="v${major}.$((minor + 1)).0"
-            next_patch_version="v${major}.${minor}.$((patch + 1))"
+            latest_tag=${CURRENT_TAGS[0]}
+            if [[ $latest_tag == v* ]]; then
+              echo "Tag prefixed with 'v', removing prefix temporary"
+              latest_tag=${CURRENT_TAGS[0]#v}
+              PREFIXED_TAG=true
+            fi
+            IFS='.' read -r major minor patch <<< "$latest_tag"
+            next_major_version="$((major + 1)).0.0"
+            next_minor_version="${major}.$((minor + 1)).0"
+            next_patch_version="${major}.${minor}.$((patch + 1))"
             case "$RELEASE_TYPE" in
               "major") NEW_TAG=$next_major_version ;;
               "minor") NEW_TAG=$next_minor_version ;;
@@ -111,8 +118,12 @@ jobs:
               *) echo "Unknow release type ${RELEASE_TYPE}" && exit 102
             esac
           fi
+          if [[ "$PREFIXED_TAG" == true ]]; then
+              NEW_TAG="v${NEW_TAG}"
+          fi
+          echo "New tag to be created: ${NEW_TAG}"
           echo "Saving NEW_TAG to Github variables..."
-          echo "new_tag=${NEW_TAG}" >> $GITHUB_OUTPUT
+          echo "new_tag=${NEW_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Create packages
         run: echo hello
