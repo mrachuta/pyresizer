@@ -76,7 +76,7 @@ jobs:
               releaseTypeCheckMessage = `PR contains exactly one valid label: ${matchingLabels[0]} ✅`;
             }
 
-            console.log(`${releaseTypeMessage}`);
+            console.log(`${releaseTypeCheckMessage}`);
             if (`${releaseTypeCheckResult}` !== 'success') core.setFailed(`${releaseTypeCheckMessage}`);
             core.setOutput("pr_label", matchingLabels[0]);
 
