@@ -132,10 +132,12 @@ jobs:
           set -xeu -o pipefail
 
           NEW_TAG=${{ steps.calculatetag.outputs.new_tag }}
+          cp README.md binaries/pyresizer-binary-Linux/
+          cp README.md binaries/pyresizer-binary-Windows/
           echo "Create Linux release..."
-          tar -cvf "pyresizer-${NEW_TAG}-linux-x64.tar" binaries/pyresizer-binary-Linux/*
+          cd binaries/pyresizer-binary-Linux/ && tar -cvf "pyresizer-${NEW_TAG}-linux-x64.tar" ./* && mv ./*.tar ../../
           echo "Create Windows release..."
-          zip -vr "pyresizer-${NEW_TAG}-windows-x64.zip" binaries/pyresizer-binary-Windows/*
+          cd binaries/pyresizer-binary-Windows/ && zip -vr "pyresizer-${NEW_TAG}-windows-x64.zip" ./* && mv ./*.zip ../../
 
       - name: Create Github release
         uses: ncipollo/release-action@v1
