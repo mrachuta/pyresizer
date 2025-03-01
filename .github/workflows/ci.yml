@@ -3,7 +3,7 @@ run-name: CI workflow triggered by ${{ github.event_name }} to ${{ github.ref_na
 on: 
   workflow_call:
   workflow_dispatch:
-  #push:
+  push:
 
 # variable PYTHON_VERSION have to be defined at repository level
 
