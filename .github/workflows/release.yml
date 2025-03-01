@@ -1,0 +1,17 @@
+name: Release workflow
+run-name: Release workflow triggered by ${{ github.event_name }} on ${{ github.ref_name }}
+on:
+  workflow_dispatch:
+  push:
+   branches:
+      - 'master'
+
+jobs:
+  example:
+    name: Example
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
