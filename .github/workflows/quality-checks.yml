@@ -8,7 +8,7 @@ on:
 jobs:
   quality-checks:
     name: Run quality checks
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ vars.PYTHON_VERSION }}
-          cache: 'pip'
+          cache: pip
 
       - name: Install packages
         run: pip install -r requirements.txt
