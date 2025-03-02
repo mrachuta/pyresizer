@@ -54,7 +54,7 @@ jobs:
     name: Run e2e tests
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019]
+        os: [ubuntu-22.04, windows-2019]
     runs-on: ${{ matrix.os }}
     needs: build-bins
     steps:
@@ -91,7 +91,7 @@ jobs:
 
   validate-pr:
     name: Validate pull request
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-22.04"
     # Skip for release builds
     if: github.event_name == 'pull_request'
     needs:
