@@ -19,7 +19,7 @@ jobs:
     name: Build binaries
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019]
+        os: [ubuntu-22.04, windows-2019]
     runs-on: ${{ matrix.os }}
     needs:
       - ci
