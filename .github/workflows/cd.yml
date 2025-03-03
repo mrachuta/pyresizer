@@ -19,6 +19,7 @@ jobs:
     name: Build binaries
     strategy:
       matrix:
+        # ubuntu-22.04 and windows-2019 are used to ensure better compatibility with end-user os
         os: [ubuntu-22.04, windows-2019]
     runs-on: ${{ matrix.os }}
     needs:
