@@ -15,16 +15,15 @@ class TestResizer(unittest.TestCase):
 
     def setUp(self):
         # Setup code that runs before each test
-        self.new_width = 800
-        self.new_height = 600
-        self.resizer = Resizer(self.new_width, self.new_height)
+        self.new_width = 640
+        self.resizer = Resizer(self.new_width)
 
     def tearDown(self):
         # Stop all patches after each test
         patch.stopall()
 
     def test_initialization(self):
-        self.assertEqual(self.resizer.img_dims, (self.new_width, self.new_height))
+        self.assertEqual(self.resizer.new_width, self.new_width)
         self.assertEqual(
             self.resizer.img_formats, [".bmp", ".gif", ".jpg", ".jpeg", ".png"]
         )
@@ -131,6 +130,8 @@ class TestResizer(unittest.TestCase):
         mock_pil_open.return_value = mock_image
         # Mock the Resampling.LANCZOS value
         mock_resampling = MagicMock()
+        # Mock size
+        mock_image.size = (1600, 1200)
         mock_resampling.LANCZOS = 1  # Simulate the actual value of Resampling.LANCZOS
         mock_pil_open.return_value.Resampling = mock_resampling
 
@@ -143,8 +144,13 @@ class TestResizer(unittest.TestCase):
         # Assert that the image was resized and saved for each image
         self.assertEqual(mock_image.thumbnail.call_count, len(self.resizer.get_imgs))
         for call in mock_image.thumbnail.call_args_list:
+            expected_new_height = self.resizer.new_width * 1200 / 1600
             self.assertEqual(
-                call, unittest.mock.call(self.resizer.img_dims, mock_resampling.LANCZOS)
+                call,
+                unittest.mock.call(
+                    (self.resizer.new_width, expected_new_height),
+                    mock_resampling.LANCZOS,
+                ),
             )
 
         self.assertTrue(result)
