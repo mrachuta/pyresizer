@@ -60,39 +60,47 @@ class TestE2E(unittest.TestCase):
 
     def testDefaultResizing(self):
         subprocess.run([self.executable], **self.subprocess_required_args)
-        image_png = PILImage.open(os.path.join(self.SCRIPT_PATH, self.BLACK_FILENAME))
-        image_png_width, image_png_height = image_png.size
-        image_jpg = PILImage.open(os.path.join(self.SCRIPT_PATH, self.RED_FILENAME))
-        image_jpg_width, image_jpg_height = image_jpg.size
-        self.assertEqual(image_png_width, 1200)
-        self.assertEqual(image_png_height, 675)
-        self.assertEqual(image_jpg_width, 1200)
-        self.assertEqual(image_jpg_height, 675)
+        with PILImage.open(
+            os.path.join(self.SCRIPT_PATH, self.BLACK_FILENAME)
+        ) as image_png:
+            image_png_width, image_png_height = image_png.size
+            self.assertEqual(image_png_width, 1200)
+            self.assertEqual(image_png_height, 675)
+        with PILImage.open(
+            os.path.join(self.SCRIPT_PATH, self.RED_FILENAME)
+        ) as image_jpg:
+            image_jpg_width, image_jpg_height = image_jpg.size
+            self.assertEqual(image_jpg_width, 1200)
+            self.assertEqual(image_jpg_height, 675)
 
     def testCustomResizing(self):
         subprocess.run(
             [self.executable + " --width 2000"], **self.subprocess_required_args
         )
-        image_png = PILImage.open(os.path.join(self.SCRIPT_PATH, self.BLACK_FILENAME))
-        image_png_width, image_png_height = image_png.size
-        image_jpg = PILImage.open(os.path.join(self.SCRIPT_PATH, self.RED_FILENAME))
-        image_jpg_width, image_jpg_height = image_jpg.size
-        self.assertEqual(image_png_width, 2000)
-        self.assertEqual(image_png_height, 1125)
-        self.assertEqual(image_jpg_width, 2000)
-        self.assertEqual(image_jpg_height, 1125)
+        with PILImage.open(
+            os.path.join(self.SCRIPT_PATH, self.BLACK_FILENAME)
+        ) as image_png:
+            image_png_width, image_png_height = image_png.size
+            self.assertEqual(image_png_width, 2000)
+            self.assertEqual(image_png_height, 1125)
+        with PILImage.open(
+            os.path.join(self.SCRIPT_PATH, self.RED_FILENAME)
+        ) as image_jpg:
+            image_jpg_width, image_jpg_height = image_jpg.size
+            self.assertEqual(image_jpg_width, 2000)
+            self.assertEqual(image_jpg_height, 1125)
 
     def testBackupsCreated(self):
         subprocess.run([self.executable], **self.subprocess_required_args)
-        image_png = PILImage.open(
+        with PILImage.open(
             os.path.join(self.SCRIPT_PATH, "bak", self.BLACK_FILENAME)
-        )
-        image_png_width, image_png_height = image_png.size
-        image_jpg = PILImage.open(
+        ) as image_png:
+            image_png_width, image_png_height = image_png.size
+            self.assertEqual(image_png_width, 3840)
+            self.assertEqual(image_png_height, 2160)
+        with PILImage.open(
             os.path.join(self.SCRIPT_PATH, "bak", self.RED_FILENAME)
-        )
-        image_jpg_width, image_jpg_height = image_jpg.size
-        self.assertEqual(image_png_width, 3840)
-        self.assertEqual(image_png_height, 2160)
-        self.assertEqual(image_jpg_width, 3840)
-        self.assertEqual(image_jpg_height, 2160)
+        ) as image_jpg:
+            image_jpg_width, image_jpg_height = image_jpg.size
+            self.assertEqual(image_jpg_width, 3840)
+            self.assertEqual(image_jpg_height, 2160)
