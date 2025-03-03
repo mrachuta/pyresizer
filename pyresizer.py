@@ -22,9 +22,9 @@ if platform.system() == "Windows":
 class Resizer:
     """Main functionality of tool"""
 
-    def __init__(self, new_width, new_height):
+    def __init__(self, new_width):
         # Both sizes could be changed according to requirements
-        self.img_dims = (new_width, new_height)
+        self.new_width = new_width
         self.img_formats = [".bmp", ".gif", ".jpg", ".jpeg", ".png"]
         self.bak_folder = "bak"
 
@@ -65,7 +65,10 @@ class Resizer:
             for index, i in enumerate(self.get_imgs):
                 print(f"Resizing {i} ({index+1} of {imgs_quantity})...")
                 im = pil_open(i)
-                im.thumbnail(self.img_dims, pil_Resampling.LANCZOS)
+                im_width, im_height = im.size
+                new_height = self.new_width * im_height / im_width
+                img_dims = (self.new_width, new_height)
+                im.thumbnail(img_dims, pil_Resampling.LANCZOS)
                 im.save(i)
                 print(f"Resizing {i} finished.")
             print("Processing finished.")
@@ -358,9 +361,12 @@ def main():
         help="Remove from the context menu",
         action="store_true",
     )
-    parser.add_argument("-x", "--width", help="New image width", type=int, default=1200)
     parser.add_argument(
-        "-y", "--height", help="New image height", type=int, default=1600
+        "-x",
+        "--width",
+        help="New image width (height will be adjusted automatically to keep aspect ration)",
+        type=int,
+        default=1200,
     )
     args = parser.parse_args()
     if args.install:
@@ -372,7 +378,7 @@ def main():
         uninstaller = InstallerUninstaller(app_name)
         uninstaller.remove_file()
     else:
-        resizer = Resizer(args.width, args.height)
+        resizer = Resizer(args.width)
         resizer.resize_files()
         input("Press ENTER key to exit...")
 
