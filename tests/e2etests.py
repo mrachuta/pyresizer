@@ -22,7 +22,8 @@ class TestE2E(unittest.TestCase):
             "cwd": self.SCRIPT_PATH,
             "capture_output": True,
             "text": True,
-            "shell": True,
+            # Explanation: https://stackoverflow.com/a/26417712
+            "shell": True if platform.system() == "Windows" else False,
             "encoding": "utf-8",
         }
         if platform.system() == "Windows":
@@ -54,9 +55,9 @@ class TestE2E(unittest.TestCase):
 
     def testHelp(self):
         result = subprocess.run(
-            [self.executable + " --help"], **self.subprocess_required_args
+            [self.executable, "--help"], **self.subprocess_required_args
         )
-        self.assertIn("optional arguments:", result.stdout)
+        self.assertIn("Script to quickly resize images.", result.stdout)
 
     def testDefaultResizing(self):
         subprocess.run([self.executable], **self.subprocess_required_args)
@@ -75,7 +76,7 @@ class TestE2E(unittest.TestCase):
 
     def testCustomResizing(self):
         subprocess.run(
-            [self.executable + " --width 2000"], **self.subprocess_required_args
+            [self.executable, "--width", "2000"], **self.subprocess_required_args
         )
         with PILImage.open(
             os.path.join(self.SCRIPT_PATH, self.BLACK_FILENAME)
