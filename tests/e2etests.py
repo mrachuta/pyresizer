@@ -65,14 +65,14 @@ class TestE2E(unittest.TestCase):
             os.path.join(self.SCRIPT_PATH, self.BLACK_FILENAME)
         ) as image_png:
             image_png_width, image_png_height = image_png.size
-            self.assertEqual(image_png_width, 1200)
-            self.assertEqual(image_png_height, 675)
+            self.assertEqual(image_png_width, 1920)
+            self.assertEqual(image_png_height, 1080)
         with PILImage.open(
             os.path.join(self.SCRIPT_PATH, self.RED_FILENAME)
         ) as image_jpg:
             image_jpg_width, image_jpg_height = image_jpg.size
-            self.assertEqual(image_jpg_width, 1200)
-            self.assertEqual(image_jpg_height, 675)
+            self.assertEqual(image_jpg_width, 1920)
+            self.assertEqual(image_jpg_height, 1080)
 
     def testCustomResizing(self):
         subprocess.run(

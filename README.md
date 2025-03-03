@@ -86,9 +86,9 @@ Libraries required to run are available in *requirements.txt* file.
   ```
   pyresizer
   ```
-- Run with custom image size
+- Run with custom image width (height will be adjusted automatically to keep aspect ration)
   ```
-  pyresizer -x 2400 -y 3200
+  pyresizer -x 2000
   ```
 - Help
   ```

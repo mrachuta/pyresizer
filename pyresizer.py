@@ -337,7 +337,7 @@ def main():
     sys.stdout.reconfigure(encoding=InstallerUninstaller.textEncoding)
     script = os_path.basename(sys.argv[0])
     app_name = "pyresizer"
-    desc = f"{app_name} 2.0.0. Script to quickly resize images."
+    desc = f"{app_name} 2.1.0. Script to quickly resize images."
     parser = argparse.ArgumentParser(prog=script, description=desc)
 
     print(
@@ -366,7 +366,7 @@ def main():
         "--width",
         help="New image width (height will be adjusted automatically to keep aspect ration)",
         type=int,
-        default=1200,
+        default=1920,
     )
     args = parser.parse_args()
     if args.install:
