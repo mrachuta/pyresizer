@@ -3,8 +3,8 @@ run-name: Release workflow triggered by ${{ github.event_name }} on ${{ github.r
 on:
   workflow_dispatch:
   push:
-   branches:
-      - 'master'
+    branches:
+      - "master"
 
 jobs:
   cd:

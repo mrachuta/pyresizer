@@ -112,7 +112,7 @@ jobs:
             const labels = context.payload.pull_request.labels.map(label => label.name.toLowerCase()) || [];
             const validLabels = ['major', 'minor', 'patch'];
             const matchingLabels = labels.filter(label => validLabels.includes(label));
-            
+
             let labelCheckResult = null;
             let labelCheckMessage = null;
 
@@ -178,4 +178,3 @@ jobs:
           sha: ${{ needs.checkout.outputs.head_sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
           status: ${{ steps.checkpr.outputs.prresult }}
-      

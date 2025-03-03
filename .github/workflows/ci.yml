@@ -1,6 +1,6 @@
 name: CI workflow
 run-name: CI workflow triggered by ${{ github.event_name }} to ${{ github.ref_name }}
-on: 
+on:
   workflow_call:
   workflow_dispatch:
   push:
@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: ${{ vars.PYTHON_VERSION }}
           # Wrapper for actions/cache@v4
-          cache: 'pip'
+          cache: "pip"
 
       - name: Install packages
         run: pip install -r requirements.txt
