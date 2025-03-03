@@ -4,3 +4,11 @@ macholib==1.16.3
 Pillow>=11.1.0
 PyInstaller>=6.11.1
 pywin32-ctypes==0.2.3
+pylint==3.3.4
+mypy==1.15.0
+isort==6.0.0
+black==25.1.0
+lxml==5.3.1
+coverage==7.6.12
+pytest==8.3.4
+pytest-cov==6.0.0

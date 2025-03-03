@@ -1,14 +1,181 @@
 name: CD workflow
 run-name: CD workflow triggered by ${{ github.event_name }} to ${{ github.ref_name }}
-on: 
-  - workflow_dispatch
+on:
+  workflow_call:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - assigned
+      - opened
+      - synchronize
+      - reopened
 
 jobs:
-  example:
-    name: Example
-    runs-on: "ubuntu-latest"
+  ci:
+    name: Call CI workflow
+    uses: ./.github/workflows/ci.yml
+
+  build-bins:
+    name: Build binaries
+    strategy:
+      matrix:
+        # ubuntu-22.04 and windows-2019 are used to ensure better compatibility with end-user os
+        os: [ubuntu-22.04, windows-2019]
+    runs-on: ${{ matrix.os }}
+    needs:
+      - ci
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Initialize python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ vars.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install packages
+        run: pip install -r requirements.txt
+
+      - name: Build binary
+        run: pyinstaller -F pyresizer.py
+
+      - name: Upload artifact
+        id: artifact-upload-step
+        uses: actions/upload-artifact@v4
+        with:
+          name: pyresizer-binary-${{ runner.os }}
+          path: dist
+          retention-days: 2
+          overwrite: true
+
+  e2e-tests:
+    name: Run e2e tests
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-2019]
+    runs-on: ${{ matrix.os }}
+    needs: build-bins
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Initialize python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ vars.PYTHON_VERSION }}
+          cache: "pip"
+
+      - name: Install packages
+        run: pip install -r requirements.txt
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          name: pyresizer-binary-${{ runner.os }}
+
+      - name: Check binary (Linux)
+        if: runner.os == 'Linux'
+        run: chmod +x ./dist/pyresizer && ./dist/pyresizer -h
+
+      - name: Check binary (Windows)
+        if: runner.os == 'Windows'
+        run: ./dist/pyresizer.exe -h
+
+      - name: Run E2E tests
+        run: pytest tests/e2etests.py
+
+  validate-pr:
+    name: Validate pull request
+    runs-on: "ubuntu-22.04"
+    # Skip for release builds
+    if: github.event_name == 'pull_request'
+    needs:
+      - ci
+      - build-bins
+      - e2e-tests
+    steps:
+      - name: Check pull request
+        uses: actions/github-script@v7
+        id: checkpr
+        with:
+          script: |
+            const name = '${{ github.workflow }}';
+            const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
+
+            const targetBranch = context.payload.pull_request.base.ref;
+            const labels = context.payload.pull_request.labels.map(label => label.name.toLowerCase()) || [];
+            const validLabels = ['major', 'minor', 'patch'];
+            const matchingLabels = labels.filter(label => validLabels.includes(label));
+            
+            let labelCheckResult = null;
+            let labelCheckMessage = null;
+
+            let jobsCheckMessage = null;
+            let jobsCheckResult = null;
+
+            if (targetBranch !== 'master') {
+              labelCheckResult = 'success';
+              labelCheckMessage = 'PR label check not required, target branch is not master ✅';
+            } else if (matchingLabels.length === 1) {
+              labelCheckResult = 'success';
+              labelCheckMessage = `PR contains exactly one valid label: ${matchingLabels[0]} ✅`;
+            } else if (matchingLabels.length === 0) {
+              labelCheckResult = 'failure';
+              labelCheckMessage = 'PR must contain exactly one of the required labels: (${validLabels.join(', ')}). ❌';
+            } else {
+              labelCheckResult = 'failure';
+              labelCheckMessage = `PR contains multiple valid labels: (${matchingLabels.join(', ')}). Only one is allowed. ❌`;
+            }
+            console.log(`${labelCheckMessage}`);
+
+            const ciResult = '${{ needs.ci.result }}';
+            const buildBinsResult = '${{ needs.build-bins.result }}';
+            const e2eTestsResult = '${{ needs.e2e-tests.result }}';
+
+            const failedJobs = [];
+
+            if (ciResult !== 'success') failedJobs.push('CI');
+            if (buildBinsResult !== 'success') failedJobs.push('Build Binaries');
+            if (e2eTestsResult !== 'success') failedJobs.push('E2E Tests');
+
+            if (failedJobs.length > 0) {
+              jobsCheckMessage = `The following jobs (or job) failed: ${failedJobs.join(', ')} ❌`;
+              jobsCheckResult = 'failure';
+            } else {
+              jobsCheckMessage = 'All required jobs finished with status success ✅';
+              jobsCheckResult = 'success';
+            }
+            console.log(`${jobsCheckMessage}`);
+
+            const validationResult = (
+              `${jobsCheckResult}` === 'success' && 
+              `${labelCheckResult}` === 'success'
+            ) ? 'success' : 'failure';
+
+            const body = `${name}: ${validationResult === 'success' ? 'succeeded ✅' : 'failed ❌'}\nURL: ${url}\n- ${labelCheckMessage}\n- ${jobsCheckMessage}`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+            core.setOutput('prresult', validationResult);
+
+            // Do not fail build in case of troubles - set commit status in next step
+
+      - name: Set pull request's latest commit status as ${{ steps.checkpr.outputs.prresult }}
+        uses: myrotvorets/set-commit-status-action@master
+        if: github.event_name == 'pull_request'
+        with:
+          sha: ${{ needs.checkout.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ steps.checkpr.outputs.prresult }}
+      

@@ -1,0 +1,28 @@
+name: Security scans workflow
+
+on:
+  workflow_call:
+
+jobs:
+  security-scans:
+    name: Run security scans
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run secrets scanning
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --results=verified,unknown
+
+      - name: Run SCA scan
+        if: runner.os == 'Linux'
+        uses: pypa/gh-action-pip-audit@v1.1.0
+        with:
+          inputs: requirements.txt
+
+      - name: Run SAST scan
+        uses: PyCQA/bandit-action@v1

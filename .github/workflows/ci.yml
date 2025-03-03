@@ -1,14 +1,39 @@
-name: CI build
-run-name: CI job triggered by ${{ github.event_name }} to ${{ github.ref_name }}
-on: [workflow_dispatch]
+name: CI workflow
+run-name: CI workflow triggered by ${{ github.event_name }} to ${{ github.ref_name }}
+on: 
+  workflow_call:
+  workflow_dispatch:
+  push:
+
+# variable PYTHON_VERSION have to be defined at repository level
 
 jobs:
-  os_matrix:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
-    runs-on: ${{ matrix.os }}
+  unit-tests:
+    name: Run unit tests
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Initialize python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ vars.PYTHON_VERSION }}
+          # Wrapper for actions/cache@v4
+          cache: 'pip'
+
+      - name: Install packages
+        run: pip install -r requirements.txt
+
+      - name: Run unit tests and code coverage check
+        run: pytest --cov-report term --cov-report xml --cov=pyresizer tests/unittests.py
+
+  quality-checks:
+    name: Call quality checks workflow
+    uses: ./.github/workflows/quality-checks.yml
+
+  security-scans:
+    name: Call security scans workflow
+    uses: ./.github/workflows/security-scans.yml

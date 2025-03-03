@@ -7,11 +7,145 @@ on:
       - 'master'
 
 jobs:
-  example:
-    name: Example
-    runs-on: "ubuntu-latest"
+  cd:
+    name: Call CD workflow
+    uses: ./.github/workflows/cd.yml
+
+  release:
+    name: Create release
+    runs-on: ubuntu-22.04
+    needs: cd
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Download artifact - Linux
+        uses: actions/download-artifact@v4
+        with:
+          path: binaries
+
+      - name: List artifacts
+        run: ls -la binaries
+
+      - name: Get latest PR id
+        id: latestpr
+        run: |
+          #!/usr/bin/env bash
+          set -xeu -o pipefail
+
+          LATEST_PR_ID=$(git log --grep="Merge pull request #[0-9]\+" --pretty=oneline -1 | sed -En "s/.*#([[:digit:]]+).*/\1/p";)
+          if [[ -z $LATEST_PR_ID ]]; then
+            echo "ERROR: Unable to find latest PR id!"
+            exit 101
+          fi
+          echo "Saving LATEST_PR_ID to Github variables..."
+          echo "latest_pr_id=${LATEST_PR_ID}" >> "$GITHUB_OUTPUT"
+
+      - name: Get release type
+        uses: actions/github-script@v7
+        id: releasetype
+        with:
+          script: |
+            const prId = ${{ steps.latestpr.outputs.latest_pr_id }};
+            const { owner, repo } = context.repo;
+
+            const { data: pr } = await github.rest.issues.get({
+              owner,
+              repo,
+              issue_number: parseInt(prId, 10)
+            });
+
+            const validLabels = ["major", "minor", "patch"];
+            const labels = pr.labels.map(label => label.name.toLowerCase()) || [];
+
+            const matchingLabels = labels.filter(label => validLabels.includes(label));
+
+            let releaseTypeCheckResult = null;
+            let releaseTypeCheckMessage = null;
+
+            if (matchingLabels.length === 0) {
+              releaseTypeCheckResult = 'failure';
+              releaseTypeCheckMessage = `PR must contain exactly one of the required labels: (${validLabels.join(', ')}). ❌`;
+            } else if (matchingLabels.length > 1) {
+              releaseTypeCheckResult = 'failure';
+              releaseTypeCheckMessage = `PR contains multiple valid labels: (${matchingLabels.join(', ')}). Only one is allowed. ❌`;
+            } else {
+              releaseTypeCheckResult = 'success';
+              releaseTypeCheckMessage = `PR contains exactly one valid label: ${matchingLabels[0]} ✅`;
+            }
+
+            console.log(`${releaseTypeCheckMessage}`);
+            if (`${releaseTypeCheckResult}` !== 'success') core.setFailed(`${releaseTypeCheckMessage}`);
+            core.setOutput("pr_label", matchingLabels[0]);
+
+      - name: Calculate new tag
+        id: calculatetag
+        run: |
+          #!/usr/bin/env bash
+          set -xeu -o pipefail
+
+          # Convert to lower case
+          RELEASE_TYPE=$(echo ${{ steps.releasetype.outputs.pr_label }} | tr '[:upper:]' '[:lower:]')
+          PREFIXED_TAG=false
+          if [[ -z $RELEASE_TYPE ]]; then
+            echo "ERROR: Unable to determine release type!"
+            exit 101
+          fi
+
+          mapfile CURRENT_TAGS < <(git tag --sort=-v:refname)
+
+          if [[ ${#CURRENT_TAGS[@]} == 0 ]]; then
+            echo "No tags found, creating initial tag: v1.0.0"
+            NEW_TAG='v1.0.0'
+          else
+            echo "Following tags were found: " "${CURRENT_TAGS[@]}"
+            echo "Latest tag is: ${CURRENT_TAGS[0]}"
+            latest_tag=${CURRENT_TAGS[0]}
+            if [[ $latest_tag == v* ]]; then
+              echo "Tag prefixed with 'v', removing prefix temporary"
+              latest_tag=${CURRENT_TAGS[0]#v}
+              PREFIXED_TAG=true
+            fi
+            IFS='.' read -r major minor patch <<< "$latest_tag"
+            next_major_version="$((major + 1)).0.0"
+            next_minor_version="${major}.$((minor + 1)).0"
+            next_patch_version="${major}.${minor}.$((patch + 1))"
+            case "$RELEASE_TYPE" in
+              "major") NEW_TAG=$next_major_version ;;
+              "minor") NEW_TAG=$next_minor_version ;;
+              "patch") NEW_TAG=$next_patch_version ;;
+              *) echo "Unknow release type ${RELEASE_TYPE}" && exit 102
+            esac
+          fi
+          if [[ "$PREFIXED_TAG" == true ]]; then
+              NEW_TAG="v${NEW_TAG}"
+          fi
+          echo "New tag to be created: ${NEW_TAG}"
+          echo "Saving NEW_TAG to Github variables..."
+          echo "new_tag=${NEW_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Create packages
+        run: |
+          #!/usr/bin/env bash
+          set -xeu -o pipefail
+
+          NEW_TAG=${{ steps.calculatetag.outputs.new_tag }}
+          ROOT_DIR=$PWD
+          cp README.md binaries/pyresizer-binary-Linux/
+          cp README.md binaries/pyresizer-binary-Windows/
+          echo "Create Linux release..."
+          cd "${ROOT_DIR}/binaries/pyresizer-binary-Linux/" && tar -cvf "pyresizer-${NEW_TAG}-linux-x64.tar" ./* && mv ./*.tar "${ROOT_DIR}/"
+          echo "Create Windows release..."
+          cd "${ROOT_DIR}/binaries/pyresizer-binary-Windows/" && zip -vr "pyresizer-${NEW_TAG}-windows-x64.zip" ./* && mv ./*.zip "${ROOT_DIR}/"
+
+      - name: Create Github release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "pyresizer-${{ steps.calculatetag.outputs.new_tag }}-linux-x64.tar,pyresizer-${{ steps.calculatetag.outputs.new_tag }}-windows-x64.zip"
+          body: "New release ${{ steps.calculatetag.outputs.new_tag }}"
+          generateReleaseNotes: true
+          commit: ${{ github.sha }}
+          name: ${{ steps.calculatetag.outputs.new_tag }}
+          tag: ${{ steps.calculatetag.outputs.new_tag }}

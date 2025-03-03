@@ -1,7 +1,6 @@
 #Ignore selected project-files
 build
 dist
-bak
 *.spec
 Thumbs.db
 pyresizer-icon.ico
@@ -10,3 +9,5 @@ __pycache__
 *.log
 *.pot
 *.pyc
+*.coverage
+reports/**

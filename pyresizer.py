@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 
-import platform
 import argparse
+import platform
 import sys
-from re import compile as re_compile, MULTILINE as re_MULTILINE
-from shutil import copy2 as shutil_copy2, rmtree as shutil_rmtree
-from os import (
-    listdir as os_listdir,
-    path as os_path,
-    mkdir as os_mkdir,
-    remove as os_remove,
-)
-from PIL.Image import open as pil_open
+from os import listdir as os_listdir
+from os import mkdir as os_mkdir
+from os import path as os_path
+from os import remove as os_remove
+from re import MULTILINE as re_MULTILINE
+from re import compile as re_compile
+from shutil import copy2 as shutil_copy2
+from shutil import rmtree as shutil_rmtree
+
 from PIL.Image import Resampling as pil_Resampling
+from PIL.Image import open as pil_open
 
 if platform.system() == "Windows":
     import winreg
@@ -21,9 +22,9 @@ if platform.system() == "Windows":
 class Resizer:
     """Main functionality of tool"""
 
-    def __init__(self, new_width, new_height):
+    def __init__(self, new_width):
         # Both sizes could be changed according to requirements
-        self.img_dims = (new_width, new_height)
+        self.new_width = new_width
         self.img_formats = [".bmp", ".gif", ".jpg", ".jpeg", ".png"]
         self.bak_folder = "bak"
 
@@ -45,13 +46,11 @@ class Resizer:
             for i in self.get_imgs:
                 shutil_copy2(i, os_path.join(self.bak_folder, i))
             print("Backup created.")
+            return True
         except IOError:
             print("Error: unable to create backup!")
             dec = input("Do you want to proceed to next step? [y/n]: ")
-            if dec.lower() == "y":
-                return True
-            else:
-                return False
+            return bool(dec.lower() == "y")
 
     def resize_files(self):
 
@@ -66,16 +65,22 @@ class Resizer:
             for index, i in enumerate(self.get_imgs):
                 print(f"Resizing {i} ({index+1} of {imgs_quantity})...")
                 im = pil_open(i)
-                im.thumbnail(self.img_dims, pil_Resampling.LANCZOS)
+                im_width, im_height = im.size
+                new_height = self.new_width * im_height / im_width
+                img_dims = (self.new_width, new_height)
+                im.thumbnail(img_dims, pil_Resampling.LANCZOS)
                 im.save(i)
                 print(f"Resizing {i} finished.")
             print("Processing finished.")
+            return True
         except IOError as exc:
             raise IOError("Error: some files were not processed!") from exc
 
 
 class InstallerUninstaller:
     """Installation or uninstallation of tool"""
+
+    textEncoding = "utf-8"
 
     def __init__(self, app_name):
 
@@ -118,6 +123,7 @@ class InstallerUninstaller:
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, f"{self.reg_path}\\command")
                 winreg.DeleteKey(winreg.HKEY_CURRENT_USER, self.reg_path)
                 print("Registry keys removed.")
+                return True
             except OSError as exc:
                 raise OSError("Error: unable to remove registry keys!") from exc
         else:
@@ -151,9 +157,9 @@ class InstallerUninstaller:
                 winreg.CloseKey(reg_key_command)
                 winreg.CloseKey(reg_key)
                 print("Registry keys added successfully.")
-            except OSError:
-                print("Error: unable to add registry keys!")
-                return False
+                return True
+            except OSError as exc:
+                raise OSError("Error: unable to add registry keys!") from exc
         else:
             raise SystemError(
                 "Error: cannot continue installation. Unsupported platform."
@@ -185,45 +191,62 @@ class InstallerUninstaller:
                         existing_files.extend(files_in_dir)
                     else:
                         existing_files.append(bash_path)
-            except Exception as e:
-                print(f"Error: error during reading object: {e}")
+            except Exception as exc:
+                raise SystemError(
+                    f"Error: error during reading object: {bash_path}"
+                ) from exc
 
         for bash_file in existing_files:
             try:
                 print(
                     f"Checking file {bash_file} against presence of $HOME/.local/bin in $PATH..."
                 )
-                with open(bash_file, "r") as f:
+                with open(bash_file, "r", encoding=self.textEncoding) as f:
                     for line in f:
                         if re_compile(r"^PATH=.*\$HOME\/\.local\/bin").search(line):
                             print(
-                                f"$HOME/.local/bin found in $PATH in file {bash_file}. Changes in $PATH not needed."
+                                f"$HOME/.local/bin found in $PATH in file {bash_file}. "
+                                + "Changes in $PATH not needed."
                             )
                             return True
-            except Exception as e:
-                print(f"Error: error during reading object {bash_file}: {e}")
+            except Exception as exc:
+                raise SystemError(
+                    f"Error: error during reading object {bash_file}"
+                ) from exc
 
         print(
-            f"$HOME/.local/bin not found in $PATH in any of files. Adding changes to {self.default_bash_file}"
+            "$HOME/.local/bin not found in $PATH in any of files. "
+            + f"Adding changes to {self.default_bash_file}"
         )
         try:
-            with open(f"{self.default_bash_file}", "a") as f:
+            with open(
+                f"{self.default_bash_file}", "a", encoding=self.textEncoding
+            ) as f:
                 f.write(
-                    '# Update added by pyresizer\nPATH="$HOME/.local/bin:$PATH"\nexport $PATH\n# End of pyresizer update\n\n'
+                    "# Update added by pyresizer\n"
+                    + 'PATH="$HOME/.local/bin:$PATH"\nexport $PATH\n'
+                    + "# End of pyresizer update\n\n"
                 )
             print("$PATH modified. Reload your bash please.")
-        except Exception as e:
-            print(f"Error: error during writing object {self.default_bash_file}: {e}")
+            return True
+        except Exception as exc:
+            raise SystemError(
+                f"Error: error during writing object {self.default_bash_file}"
+            ) from exc
 
     def _remove_from_linux_path(self):
 
         try:
             print("Removing application from $PATH...")
-            with open(f"{self.default_bash_file}", "r") as f:
+            with open(
+                f"{self.default_bash_file}", "r", encoding=self.textEncoding
+            ) as f:
                 file_content = f.read()
             # Get content and replace
             update_pattern = re_compile(
-                r'# Update added by pyresizer\nPATH="\$HOME/\.local/bin:\$PATH"\nexport \$PATH\n# End of pyresizer update\n\n',
+                r"# Update added by pyresizer\n"
+                + r'PATH="\$HOME/\.local/bin:\$PATH"\nexport \$PATH\n'
+                + r"# End of pyresizer update\n\n",
                 re_MULTILINE,
             )
             if not update_pattern.search(file_content):
@@ -233,13 +256,16 @@ class InstallerUninstaller:
                 return True
 
             new_content = update_pattern.sub("", file_content)
-            with open(f"{self.default_bash_file}", "w") as f:
+            with open(
+                f"{self.default_bash_file}", "w", encoding=self.textEncoding
+            ) as f:
                 f.write(new_content)
             print("$PATH modified. Reload your bash please.")
-        except Exception as e:
-            print(
-                f"Error: error during reading or writing object {self.default_bash_file}: {e}"
-            )
+            return True
+        except Exception as exc:
+            raise SystemError(
+                f"Error: error during reading or writing object {self.default_bash_file}"
+            ) from exc
 
     def copy_file(self):
 
@@ -265,6 +291,7 @@ class InstallerUninstaller:
             self._add_to_linux_path()
 
         print("Installation completed!")
+        return True
 
     def remove_file(self):
 
@@ -302,34 +329,44 @@ class InstallerUninstaller:
             self._remove_from_linux_path()
 
         print("Uninstallation completed!")
+        return True
 
 
 def main():
 
+    sys.stdout.reconfigure(encoding=InstallerUninstaller.textEncoding)
     script = os_path.basename(sys.argv[0])
     app_name = "pyresizer"
-    desc = f"{app_name} 2.0.0. Script to quickly resize images."
+    desc = f"{app_name} 2.1.0. Script to quickly resize images."
     parser = argparse.ArgumentParser(prog=script, description=desc)
 
     print(
-        """\
+        """\n
         ┌─┐┬ ┬┬─┐┌─┐┌─┐┬┌─┐┌─┐┬─┐
         ├─┘└┬┘├┬┘├┤ └─┐│┌─┘├┤ ├┬┘
         ┴   ┴ ┴└─└─┘└─┘┴└─┘└─┘┴└─
-        \n
         \nType -h or --help to see more information.
         """
     )
 
     parser.add_argument(
-        "-i", "--install", help="Install to the context menu", action="store_true"
+        "-i",
+        "--install",
+        help="Install to the context menu",
+        action="store_true",
     )
     parser.add_argument(
-        "-u", "--uninstall", help="Remove from the context menu", action="store_true"
+        "-u",
+        "--uninstall",
+        help="Remove from the context menu",
+        action="store_true",
     )
-    parser.add_argument("-x", "--width", help="New image width", type=int, default=1200)
     parser.add_argument(
-        "-y", "--height", help="New image height", type=int, default=1600
+        "-x",
+        "--width",
+        help="New image width (height will be adjusted automatically to keep aspect ration)",
+        type=int,
+        default=1920,
     )
     args = parser.parse_args()
     if args.install:
@@ -341,7 +378,7 @@ def main():
         uninstaller = InstallerUninstaller(app_name)
         uninstaller.remove_file()
     else:
-        resizer = Resizer(args.width, args.height)
+        resizer = Resizer(args.width)
         resizer.resize_files()
         input("Press ENTER key to exit...")
 
