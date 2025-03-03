@@ -13,7 +13,7 @@ source = ["pyresizer"]
 [tool.coverage.report]
 precision  = 2
 skip_empty = true
-fail_under = 60.00
+fail_under = 66.00
 exclude_also = [
     'def _remove_from_windows_context_menu',
     'def _add_to_windows_context_menu',
