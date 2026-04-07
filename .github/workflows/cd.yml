@@ -19,19 +19,18 @@ jobs:
     name: Build binaries
     strategy:
       matrix:
-        # ubuntu-22.04 and windows-2019 are used to ensure better compatibility with end-user os
-        os: [ubuntu-22.04, windows-2019]
+        os: [ubuntu-24.04, windows-2025]
     runs-on: ${{ matrix.os }}
     needs:
       - ci
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Initialize python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ vars.PYTHON_VERSION }}
           cache: "pip"
@@ -44,7 +43,7 @@ jobs:
 
       - name: Upload artifact
         id: artifact-upload-step
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pyresizer-binary-${{ runner.os }}
           path: dist
@@ -55,17 +54,17 @@ jobs:
     name: Run e2e tests
     strategy:
       matrix:
-        os: [ubuntu-22.04, windows-2019]
+        os: [ubuntu-24.04, windows-2025]
     runs-on: ${{ matrix.os }}
     needs: build-bins
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Initialize python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ vars.PYTHON_VERSION }}
           cache: "pip"
@@ -74,7 +73,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Download artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: dist
           name: pyresizer-binary-${{ runner.os }}
@@ -92,7 +91,7 @@ jobs:
 
   validate-pr:
     name: Validate pull request
-    runs-on: "ubuntu-22.04"
+    runs-on: "ubuntu-24.04"
     # Skip for release builds
     if: github.event_name == 'pull_request'
     needs:
@@ -101,7 +100,7 @@ jobs:
       - e2e-tests
     steps:
       - name: Check pull request
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         id: checkpr
         with:
           script: |
