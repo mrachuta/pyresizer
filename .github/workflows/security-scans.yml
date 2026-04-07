@@ -14,13 +14,13 @@ jobs:
           fetch-depth: 0
 
       - name: Run secrets scanning
-        uses: trufflesecurity/trufflehog@v3
+        uses: trufflesecurity/trufflehog@v3.94.2
         with:
           extra_args: --results=verified,unknown
 
       - name: Run SCA scan
         if: runner.os == 'Linux'
-        uses: pypa/gh-action-pip-audit@v1
+        uses: pypa/gh-action-pip-audit@v1.1.0
         with:
           inputs: requirements.txt
 
