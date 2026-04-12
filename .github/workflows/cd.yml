@@ -21,6 +21,9 @@ concurrency:
 jobs:
   ci:
     name: Call CI workflow
+    concurrency:
+      group: ${{ github.workflow }}-child-${{ github.ref }}
+      cancel-in-progress: true
     uses: ./.github/workflows/ci.yml
 
   build-bins:
