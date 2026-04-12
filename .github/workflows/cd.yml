@@ -15,14 +15,14 @@ on:
       - created
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: cd-workflow-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   ci:
     name: Call CI workflow
     concurrency:
-      group: ${{ github.workflow }}-child-${{ github.ref }}
+      group: ci-workflow-${{ github.ref }}
       cancel-in-progress: true
     uses: ./.github/workflows/ci.yml
 

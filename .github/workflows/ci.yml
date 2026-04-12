@@ -6,7 +6,7 @@ on:
   push:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ci-workflow-${{ github.ref }}
   cancel-in-progress: true
 
 # variable PYTHON_VERSION have to be defined at repository level
