@@ -5,6 +5,10 @@ on:
   workflow_dispatch:
   push:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # variable PYTHON_VERSION have to be defined at repository level
 
 jobs:
