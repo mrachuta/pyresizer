@@ -5,23 +5,26 @@ on:
   workflow_dispatch:
   push:
 
+concurrency:
+  group: ci-workflow-${{ github.ref }}
+  cancel-in-progress: true
+
 # variable PYTHON_VERSION have to be defined at repository level
 
 jobs:
   unit-tests:
     name: Run unit tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Initialize python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ vars.PYTHON_VERSION }}
-          # Wrapper for actions/cache@v4
           cache: "pip"
 
       - name: Install packages

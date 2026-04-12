@@ -337,17 +337,15 @@ def main():
     sys.stdout.reconfigure(encoding=InstallerUninstaller.textEncoding)
     script = os_path.basename(sys.argv[0])
     app_name = "pyresizer"
-    desc = f"{app_name} 2.1.0. Script to quickly resize images."
+    desc = f"{app_name} 2.1.1. Script to quickly resize images."
     parser = argparse.ArgumentParser(prog=script, description=desc)
 
-    print(
-        """\n
+    print("""\n
         ┌─┐┬ ┬┬─┐┌─┐┌─┐┬┌─┐┌─┐┬─┐
         ├─┘└┬┘├┬┘├┤ └─┐│┌─┘├┤ ├┬┘
         ┴   ┴ ┴└─└─┘└─┘┴└─┘└─┘┴└─
         \nType -h or --help to see more information.
-        """
-    )
+        """)
 
     parser.add_argument(
         "-i",

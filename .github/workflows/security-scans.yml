@@ -6,15 +6,15 @@ on:
 jobs:
   security-scans:
     name: Run security scans
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Run secrets scanning
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@v3.94.2
         with:
           extra_args: --results=verified,unknown
 
